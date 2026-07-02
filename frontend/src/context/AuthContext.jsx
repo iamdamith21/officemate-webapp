@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
     const connectRos = () => {
       console.log('Attempting to connect to ROS Bridge...');
       ros = new ROSLIB.Ros({
-        url: 'ws://localhost:9090'
+        url: import.meta.env.VITE_ROS_BRIDGE_URL || 'ws://localhost:9090'
       });
 
       ros.on('connection', () => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext'; // 1. මේක එකතු කරා
+import { AuthProvider } from './context/AuthContext';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import UserDashboard from './pages/UserDashboard';
@@ -13,7 +13,7 @@ import ResetPassword from './pages/ResetPassword';
 
 export default function App() {
   return (
-    <AuthProvider> {/* 2. මුළු රවුටර් එකම මේකෙන් වට කරා */}
+    <AuthProvider>
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
