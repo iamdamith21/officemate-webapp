@@ -40,9 +40,15 @@ export default function ChatAgent() {
       } else if (lowerInput.includes('delivery') || lowerInput.includes('send')) {
         botText = "To send a delivery, navigate to 'Create Delivery' on the sidebar, select the recipient, and load the documents.";
       } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
-        botText = "Hi there! Let me know if you need help tracking a delivery.";
+        botText = "Hi there! Let me know if you need help with your account or tracking a delivery.";
       } else if (lowerInput.includes('help')) {
-        botText = "I can answer questions about the robot's status or guide you through creating a delivery request.";
+        botText = "I can answer questions about the robot's status, guide you through creating a delivery, or help you with your account (login, register, reset password).";
+      } else if (lowerInput.includes('login') || lowerInput.includes('sign in')) {
+        botText = "To log in, use your University Email and password. If you don't have an account, click 'Create an Account' below.";
+      } else if (lowerInput.includes('register') || lowerInput.includes('create account')) {
+        botText = "You can register by clicking 'Create an Account'. Note: Currently, only staff from the Department of Information Technology can register.";
+      } else if (lowerInput.includes('password') || lowerInput.includes('reset') || lowerInput.includes('forgot')) {
+        botText = "If you forgot your password, click 'Forgot Password?' on the login screen to receive a reset link via your university email.";
       }
 
       setMessages((prev) => [...prev, { id: Date.now() + 1, text: botText, isUser: false }]);

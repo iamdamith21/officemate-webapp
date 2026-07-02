@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
+import ChatAgent from '../components/ChatAgent';
 import API from '../api';
 
 export default function Login() {
@@ -34,7 +35,10 @@ export default function Login() {
         }
       }
     } catch (error) {
-      const msg = error.response?.data?.error || error.response?.data?.message || error.message || 'Login failed. Please check your credentials.';
+      let msg = error.response?.data?.error || error.response?.data?.message || error.message || 'Login failed. Please check your credentials.';
+      if (error.message === 'Network Error') {
+        msg = 'Network Error: Cannot connect to the backend server. Please check your VITE_API_URL configuration on Vercel or ensure the backend is running.';
+      }
       setErrorMsg(msg);
     } finally {
       setLoading(false);
@@ -131,6 +135,8 @@ export default function Login() {
           </div>
         </form>
       </div>
+      {/* Chat Agent integration */}
+      <ChatAgent />
     </AuthLayout>
   );
 }

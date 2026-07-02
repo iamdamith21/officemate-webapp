@@ -125,6 +125,9 @@ export default function Register() {
           {/* Row 3: Department */}
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Department</label>
+            <p className="text-xs text-blue-600 mb-2 font-medium bg-blue-50 p-2 rounded-lg border border-blue-100">
+              ℹ️ Registrations are currently available for the Department of Information Technology only.
+            </p>
             <select
               name="department"
               required
@@ -134,7 +137,13 @@ export default function Register() {
             >
               <option value="">Select your department</option>
               {DEPARTMENTS.map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
+                <option 
+                  key={dept} 
+                  value={dept}
+                  disabled={dept !== 'Department of Information Technology'}
+                >
+                  {dept}
+                </option>
               ))}
             </select>
           </div>
