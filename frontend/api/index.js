@@ -20,13 +20,14 @@ app.use(express.json());
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  console.error('❌ MONGO_URI environment variable is missing!');
-  process.exit(1);
+  console.error('❌ MONGO_URI environment variable is missing in Vercel!');
 }
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('🍃 MongoDB Database Connected Successfully!'))
-  .catch((err) => console.error('❌ Database Connection Error:', err));
+if (MONGO_URI) {
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log('🍃 MongoDB Database Connected Successfully!'))
+    .catch((err) => console.error('❌ Database Connection Error:', err));
+}
 
 // API Routes Setup
 app.use('/api/employees', employeeRoutes);  // Employee operations
