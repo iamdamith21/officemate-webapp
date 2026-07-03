@@ -23,6 +23,13 @@ if (!MONGO_URI) {
   console.error('❌ MONGO_URI environment variable is missing in Vercel!');
 }
 
+app.use((req, res, next) => {
+  if (!MONGO_URI) {
+    return res.status(500).json({ success: false, error: 'Database configuration missing (MONGO_URI). Please add it to Vercel Environment Variables and redeploy.' });
+  }
+  next();
+});
+
 if (MONGO_URI) {
   mongoose.connect(MONGO_URI)
     .then(() => console.log('🍃 MongoDB Database Connected Successfully!'))
@@ -30,13 +37,27 @@ if (MONGO_URI) {
 }
 
 // API Routes Setup
+// Depending on Vercel's rewrite mechanism, req.url might have /api stripped.
+// So we mount on both with and without /api prefix to be safe.
 app.use('/api/employees', employeeRoutes);  // Employee operations
+app.use('/employees', employeeRoutes);
+
 app.use('/api/deliveries', deliveryRoutes); // Robot delivery requests
+app.use('/deliveries', deliveryRoutes);
+
 app.use('/api/robot', robotRoutes);         // Robot live status updates
+app.use('/robot', robotRoutes);
 
 // Root API Endpoint
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.send('🚀 OfficeMate Backend Server is running successfully.');
+});
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `Route not found on Vercel. Requested path: ${req.url}, Original URL: ${req.originalUrl}`
+  });
 });
 
 module.exports = app;
