@@ -1,39 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '../components/DashboardLayout';
-import { useAuth } from '../context/AuthContext';
-import API from '../api';
-
-// ── State machine definition ──────────────────────────────────────
-const DELIVERY_STATES = [
-  { key: 'Requested',            label: 'Requested',          icon: '📋', desc: 'Awaiting recipient confirmation' },
-  { key: 'Heading to Sender',    label: 'Heading to Sender',  icon: '🚗', desc: 'Robot travelling to sender\'s room' },
-  { key: 'Heading to Recipient', label: 'En Route',           icon: '📦', desc: 'Documents loaded — heading to recipient' },
-  { key: 'Awaiting Pickup',      label: 'Awaiting Pickup',    icon: '⏳', desc: 'Robot waiting — please collect documents' },
-  { key: 'Completed',            label: 'Completed',          icon: '🎉', desc: 'Delivery complete — robot returning to base' },
-];
-
-const getStateIndex = (status) => {
-  const idx = DELIVERY_STATES.findIndex(s => s.key === status);
-  return idx >= 0 ? idx : 0;
-};
-
-// ── SVG floor plan locations ──────────────────────────────────────
-const ROOM_COORDS = {
-  'Dean\'s Office':     { x: 250, y: 175 },
-  'IT Room 101':        { x: 90,  y: 80  },
-  'IT Room 102':        { x: 90,  y: 80  },
-  'IT Lab 201':         { x: 90,  y: 80  },
-  'CT Room 103':        { x: 410, y: 80  },
-  'CT Lab 202':         { x: 410, y: 80  },
-  'IDS Room 104':       { x: 90,  y: 270 },
-  'IDS Lab 203':        { x: 90,  y: 270 },
-  'Lecture Hall A':     { x: 410, y: 270 },
-  'Lecture Hall B':     { x: 410, y: 270 },
-  'Staff Room':         { x: 250, y: 80  },
-  'Conference Room':    { x: 250, y: 270 },
-};
-const BASE_COORDS = ROOM_COORDS["Dean's Office"];
+import DashboardLayout from '../../layouts/DashboardLayout';
+import { useAuth } from '../../context/AuthContext';
+import API from '../../config/api';
+import useRobotStatus from '../../hooks/useRobotStatus';
+import { DELIVERY_STATES, ROOM_COORDS, BASE_COORDS } from '../../constants';
+import { getStateIndex } from '../../utils/helpers';
 
 export default function UserDashboard() {
   const navigate = useNavigate();
@@ -47,25 +19,7 @@ export default function UserDashboard() {
     isRosConnected
   } = useAuth();
 
-  const [robotStatus, setRobotStatus] = useState({
-    currentLocation: "Dean's Office",
-    status: 'Idle',
-    batteryLevel: 100,
-  });
-
-  const fetchRobotStatus = async () => {
-    try {
-      const response = await API.get('/robot/status');
-      if (response.data.success) setRobotStatus(response.data.data);
-    } catch { /* robot status endpoint optional */ }
-  };
-
-
-  useEffect(() => {
-    fetchRobotStatus();
-    const interval = setInterval(fetchRobotStatus, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const robotStatus = useRobotStatus();
 
   // ── Derive key data ───────────────────────────────────────────
   // My sent deliveries (where I'm the sender)

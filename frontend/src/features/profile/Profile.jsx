@@ -1,6 +1,7 @@
 import React from 'react';
-import DashboardLayout from '../components/DashboardLayout';
-import { useAuth } from '../context/AuthContext';
+import DashboardLayout from '../../layouts/DashboardLayout';
+import { useAuth } from '../../context/AuthContext';
+import { getInitials } from '../../utils/helpers';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ export default function Profile() {
             {/* Avatar */}
             <div className="flex-shrink-0 relative group">
               <div className="w-32 h-32 rounded-3xl bg-blue-600 text-white flex items-center justify-center text-5xl font-bold shadow-lg shadow-blue-500/20 uppercase tracking-widest ring-4 ring-blue-50">
-                {user?.name ? (user.name.split(' ').length > 1 ? user.name.split(' ')[0][0] + user.name.split(' ')[1][0] : user.name.slice(0,2)) : 'US'}
+                {getInitials(user?.name)}
               </div>
               <button className="absolute -bottom-3 -right-3 w-10 h-10 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-md text-slate-500 hover:text-blue-600 hover:scale-110 transition-all">
                 ✏️

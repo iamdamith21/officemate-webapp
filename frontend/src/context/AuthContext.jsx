@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import * as ROSLIB from 'roslib';
-import API from '../api';
+import API from '../config/api';
 
 const AuthContext = createContext();
 

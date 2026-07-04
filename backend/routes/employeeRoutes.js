@@ -18,7 +18,7 @@ router.post('/register', async (req, res) => {
       name,
       email: email.toLowerCase(),
       department,
-      rfidTag: rfidTag || `RFID-${Date.now()}`,
+      rfidTag: rfidTag || Array.from({ length: 4 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(' '),
       password: password || 'password123',
       role: role || 'Lecturer'
     });

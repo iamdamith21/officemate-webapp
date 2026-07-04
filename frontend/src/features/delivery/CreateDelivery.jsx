@@ -1,29 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '../components/DashboardLayout';
-import { useAuth } from '../context/AuthContext';
-import API from '../api';
-
-const DEPARTMENTS = [
-  'Department of Information Technology',
-  'Department of Computational Technology',
-  'Department of Interdisciplinary Studies'
-];
-
-const ROOMS = [
-  'Dean\'s Office',
-  'IT Room 101',
-  'IT Room 102',
-  'IT Lab 201',
-  'CT Room 103',
-  'CT Lab 202',
-  'IDS Room 104',
-  'IDS Lab 203',
-  'Lecture Hall A',
-  'Lecture Hall B',
-  'Staff Room',
-  'Conference Room'
-];
+import DashboardLayout from '../../layouts/DashboardLayout';
+import { useAuth } from '../../context/AuthContext';
+import API from '../../config/api';
+import { DEPARTMENTS, ROOMS } from '../../constants';
 
 export default function CreateDelivery() {
   const navigate = useNavigate();
@@ -178,7 +158,7 @@ export default function CreateDelivery() {
             {/* Recipient Email */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                📧 Recipient's University Email
+                📧 Recipient's Staff Email
               </label>
               <input
                 type="email"

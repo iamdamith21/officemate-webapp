@@ -1,15 +1,25 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import UserDashboard from './pages/UserDashboard';
-import CreateDelivery from './pages/CreateDelivery';
-import Profile from './pages/Profile';
-import AdminDashboard from './pages/AdminDashboard';
-import Analytics from './pages/Analytics';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
+
+// ── Auth Feature ──
+import Register from './features/auth/Register';
+import Login from './features/auth/Login';
+import ForgotPassword from './features/auth/ForgotPassword';
+import ResetPassword from './features/auth/ResetPassword';
+
+// ── Dashboard Feature ──
+import UserDashboard from './features/dashboard/UserDashboard';
+import AdminDashboard from './features/dashboard/AdminDashboard';
+
+// ── Delivery Feature ──
+import CreateDelivery from './features/delivery/CreateDelivery';
+
+// ── Analytics Feature ──
+import Analytics from './features/analytics/Analytics';
+
+// ── Profile Feature ──
+import Profile from './features/profile/Profile';
 
 export default function App() {
   return (

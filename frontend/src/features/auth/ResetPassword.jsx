@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import AuthLayout from '../components/AuthLayout';
-import API from '../api';
+import AuthLayout from '../../layouts/AuthLayout';
+import API from '../../config/api';
 
 export default function ResetPassword() {
   const { token } = useParams();

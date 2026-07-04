@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import AuthLayout from '../components/AuthLayout';
-import API from '../api';
-
-const DEPARTMENTS = [
-  'Department of Information Technology',
-  'Department of Computational Technology',
-  'Department of Interdisciplinary Studies'
-];
+import AuthLayout from '../../layouts/AuthLayout';
+import API from '../../config/api';
+import { DEPARTMENTS } from '../../constants';
+import { formatRfidInput, isValidRfidHex } from '../../utils/helpers';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -24,7 +20,13 @@ export default function Register() {
   const [successMsg, setSuccessMsg] = useState('');
 
   const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    if (name === 'rfid') {
+      // Auto-format RFID as hex pairs: XX XX XX XX
+      setFormData(prev => ({ ...prev, rfid: formatRfidInput(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleRegister = async (e) => {
@@ -41,13 +43,18 @@ export default function Register() {
       return;
     }
 
+    if (!isValidRfidHex(formData.rfid)) {
+      setErrorMsg('RFID Card Number must be in hexadecimal format (e.g., 38 8B 95 1A).');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await API.post('/employees/register', {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         department: formData.department,
-        rfidTag: formData.rfid,
+        rfidTag: formData.rfid.toUpperCase(),
         password: formData.password,
         role: 'Lecturer'
       });
@@ -110,7 +117,7 @@ export default function Register() {
 
           {/* Row 2: Email */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">University Email</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Staff Email</label>
             <input
               type="email"
               name="email"
@@ -148,20 +155,34 @@ export default function Register() {
             </select>
           </div>
 
-          {/* Row 4: RFID */}
+          {/* Row 4: RFID — Hexadecimal format */}
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
               RFID Card Number
             </label>
+            <p className="text-xs text-slate-500 mb-2 font-medium bg-slate-50 p-2 rounded-lg border border-slate-200">
+              📟 Enter the 8-digit hexadecimal code from your staff card.
+            </p>
             <input
               type="text"
               name="rfid"
               required
               value={formData.rfid}
               onChange={handleChange}
-              placeholder="Scan or enter your staff card number"
-              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 text-sm transition"
+              placeholder="e.g., 38 8B 95 1A"
+              maxLength={11}
+              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 text-sm transition font-mono tracking-widest uppercase"
             />
+            {formData.rfid && !isValidRfidHex(formData.rfid) && formData.rfid.length > 0 && (
+              <p className="mt-1.5 text-xs text-amber-600 font-medium">
+                ⚠️ Format: 4 hex pairs separated by spaces (e.g., 38 8B 95 1A)
+              </p>
+            )}
+            {isValidRfidHex(formData.rfid) && (
+              <p className="mt-1.5 text-xs text-emerald-600 font-medium">
+                ✅ Valid RFID format
+              </p>
+            )}
           </div>
 
           {/* Row 5: Passwords */}

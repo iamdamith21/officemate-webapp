@@ -31,7 +31,8 @@ const EmployeeSchema = new mongoose.Schema({
   rfidTag: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    match: [/^[0-9A-Fa-f]{2}( [0-9A-Fa-f]{2}){3}$/, 'RFID must be in hexadecimal format (e.g., 38 8B 95 1A)']
   },
   role: {
     type: String,

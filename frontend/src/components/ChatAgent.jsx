@@ -1,11 +1,172 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
+// ─── Knowledge Base ─────────────────────────────────────────────
+// Comprehensive topic-response map for the OfficeMate assistant.
+const KNOWLEDGE_BASE = [
+  {
+    keywords: ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'greetings'],
+    response: "Hello! 👋 I'm the OfficeMate Assistant. I can help you with deliveries, robot status, account management, RFID cards, and more. What would you like to know?"
+  },
+  {
+    keywords: ['how are you', 'how do you do', 'what\'s up'],
+    response: "I'm doing great, thank you for asking! I'm always here to help you with the OfficeMate delivery system. What can I assist you with today?"
+  },
+  {
+    keywords: ['thank', 'thanks', 'appreciate', 'cheers'],
+    response: "You're welcome! 😊 Don't hesitate to reach out if you need anything else. Happy to help!"
+  },
+  {
+    keywords: ['bye', 'goodbye', 'see you', 'later', 'take care'],
+    response: "Goodbye! Have a wonderful day! 👋 Feel free to chat anytime you need help with OfficeMate."
+  },
+  // ── Robot Status ──
+  {
+    keywords: ['status', 'where is', 'robot location', 'robot position', 'where robot', 'current location'],
+    response: "The OfficeMate robot's current status is displayed on your Dashboard under 'OfficeMate Robot Status'. It shows the live location, battery level, and hardware sync state. The robot's home base is the Dean's Office, and it returns there automatically after each delivery."
+  },
+  {
+    keywords: ['battery', 'charge', 'power', 'charging'],
+    response: "The robot's battery level is shown on the Dashboard and Admin panel. When the battery is low, the robot automatically returns to the Dean's Office charging dock. Admins can also manually return the robot to base using the 'Return to Dean's Office' button."
+  },
+  {
+    keywords: ['ros', 'rosbridge', 'hardware', 'raspberry pi', 'pi', 'connection', 'offline', 'online'],
+    response: "OfficeMate connects to the physical robot via ROS Bridge (WebSocket on port 9090). The connection status is shown as a green 'ROS Sync Active' or red 'ROS Offline' indicator. If it shows offline, the Raspberry Pi or ROS bridge server may not be running. Contact your system administrator."
+  },
+  // ── Delivery Workflow ──
+  {
+    keywords: ['delivery', 'send', 'how to send', 'create delivery', 'new delivery', 'deliver documents', 'send documents', 'send package'],
+    response: "To send a delivery:\n1️⃣ Go to 'Create Delivery' in the sidebar\n2️⃣ Enter the recipient's staff email — their name auto-fills\n3️⃣ Select your pickup room and their delivery room\n4️⃣ Describe the items and click 'Send Delivery Request'\n\nThe recipient will get a pop-up notification to accept or decline. Once accepted, the robot dispatches automatically!"
+  },
+  {
+    keywords: ['confirm', 'accept', 'incoming', 'pending', 'notification', 'pop-up', 'popup', 'approve'],
+    response: "When someone sends you a delivery request, a pop-up notification appears on your Dashboard. You can either 'Accept Delivery' (the robot starts moving) or 'Decline' (the request is cancelled). The system polls for new requests every 5 seconds automatically."
+  },
+  {
+    keywords: ['track', 'tracking', 'progress', 'state', 'pipeline', 'status of delivery', 'where is my delivery'],
+    response: "Active deliveries are tracked in real-time on your Dashboard with a 5-step state machine:\n📋 Requested → 🚗 Heading to Sender → 📦 En Route → ⏳ Awaiting Pickup → 🎉 Completed\n\nThe current step is highlighted, and the floor map shows the robot's live position."
+  },
+  {
+    keywords: ['cancel', 'decline', 'reject'],
+    response: "You can decline an incoming delivery request from the pop-up notification on your Dashboard. Once declined, the request status changes to 'Cancelled'. Currently, senders cannot cancel a request that has already been accepted."
+  },
+  {
+    keywords: ['history', 'past deliveries', 'previous', 'log', 'records'],
+    response: "Your delivery history is available at the bottom of the Dashboard page in the 'Delivery History' table. It shows all sent and received deliveries with their Ref ID, sender, recipient, contents, and current status."
+  },
+  // ── RFID & Locker ──
+  {
+    keywords: ['rfid', 'card', 'scan', 'locker', 'lock', 'unlock', 'cabinet', 'compartment', 'staff card'],
+    response: "Each staff member has an RFID card registered in the system (format: XX XX XX XX in hexadecimal, e.g., 38 8B 95 1A). The RFID card is used to unlock the robot's locker compartment for secure document pickup and drop-off. You can find your RFID number on your registration details."
+  },
+  // ── Account & Auth ──
+  {
+    keywords: ['login', 'sign in', 'log in', 'authentication', 'access'],
+    response: "To log in, use your Staff Email and password on the login page. If you're an admin, use admin credentials. If you don't have an account yet, click 'Create an Account' to register."
+  },
+  {
+    keywords: ['register', 'create account', 'sign up', 'new account', 'registration'],
+    response: "To register:\n1️⃣ Click 'Create an Account' on the login page\n2️⃣ Enter your full name, staff email, department, and RFID card number (in hex format like 38 8B 95 1A)\n3️⃣ Set a password (min. 6 characters)\n\nNote: Registrations are currently limited to the Department of Information Technology."
+  },
+  {
+    keywords: ['password', 'reset', 'forgot', 'change password', 'reset password'],
+    response: "If you forgot your password, click 'Forgot Password?' on the login screen. Enter your staff email and you'll receive a reset link via email. The link expires after 1 hour. You can also change your password from the Profile page."
+  },
+  {
+    keywords: ['profile', 'my account', 'account info', 'my details', 'personal info'],
+    response: "Visit the 'Profile' page from the sidebar to view your account details including your name, email, department, and role. You can also manage your security settings and change your password from there."
+  },
+  // ── Admin Features ──
+  {
+    keywords: ['admin', 'control panel', 'dashboard admin', 'admin features', 'management'],
+    response: "The Admin Control Panel provides:\n🎛️ Manual robot controls (Pause, Resume, Emergency Stop, Return to Base)\n📊 System health monitoring (navigation, sensors, locker, battery)\n📋 All delivery requests management with state advancement\n📡 Live radar map showing robot surroundings\n📈 Reports & Analytics for delivery statistics"
+  },
+  {
+    keywords: ['emergency', 'stop', 'halt', 'pause', 'resume'],
+    response: "Admins can control the robot manually:\n⏸️ Pause — Holds the robot at its current position\n▶️ Resume — Continues the current task\n🚨 Emergency Stop — Immediately halts all robot movement\n🏠 Return to Base — Sends the robot back to the Dean's Office\n\nThese controls are in the Admin Dashboard under 'Manual Override'."
+  },
+  // ── Analytics ──
+  {
+    keywords: ['analytics', 'statistics', 'reports', 'data', 'metrics', 'chart', 'graph'],
+    response: "The Analytics page (Admin only) shows:\n📊 Total delivery count\n✅ Success rate percentage\n⏱️ Average delivery time\n📈 Deliveries per day bar chart\n\nAccess it from 'Reports & Analytics' in the sidebar."
+  },
+  // ── Map & Navigation ──
+  {
+    keywords: ['map', 'floor plan', 'navigation', 'room', 'location', 'faculty', 'building'],
+    response: "The Faculty Floor Map on the Dashboard shows the building layout with departments (IT, CT, IDS), the Dean's Office (home base), and common areas (Lecture Halls, Staff Room, Conference Room). The robot's live position is shown as a blue dot that moves in real-time during deliveries."
+  },
+  {
+    keywords: ['department', 'departments', 'faculty', 'it department', 'ct department', 'ids department'],
+    response: "OfficeMate serves three departments:\n🖥️ Department of Information Technology (IT) — Rooms 101, 102, Lab 201\n💻 Department of Computational Technology (CT) — Room 103, Lab 202\n📚 Department of Interdisciplinary Studies (IDS) — Room 104, Lab 203\n\nThe robot operates from the Dean's Office as its home base."
+  },
+  // ── Technical ──
+  {
+    keywords: ['sensor', 'obstacle', 'lidar', 'detect', 'avoid'],
+    response: "The OfficeMate robot is equipped with obstacle detection sensors that are monitored via the Admin Dashboard's radar map. The scan range is approximately 12 metres. The robot uses these sensors for autonomous navigation and obstacle avoidance throughout the faculty corridors."
+  },
+  {
+    keywords: ['how does it work', 'technology', 'tech stack', 'system', 'architecture'],
+    response: "OfficeMate uses:\n🌐 React + Vite frontend with Tailwind CSS\n⚡ Node.js/Express backend with MongoDB Atlas\n🤖 ROS2 (Robot Operating System) on Raspberry Pi\n📡 WebSocket connection via ROS Bridge\n🔐 RFID authentication for locker access\n☁️ Deployed on Vercel (frontend + serverless API)"
+  },
+  // ── Misc ──
+  {
+    keywords: ['help', 'what can you do', 'features', 'capabilities', 'options'],
+    response: "I can help you with:\n📦 Creating and tracking deliveries\n🤖 Robot status and location\n🔐 RFID card and locker information\n👤 Account management (login, register, password reset)\n🎛️ Admin controls and analytics\n🗺️ Faculty map and room locations\n⚙️ Technical information about the system\n\nJust ask me anything!"
+  },
+  {
+    keywords: ['who made', 'who built', 'developer', 'created by', 'about'],
+    response: "OfficeMate is an Autonomous Robotic Delivery Platform designed for the Faculty of Information Technology. It enables staff members to send documents and packages to colleagues via an autonomous delivery robot, complete with RFID-secured locker compartments."
+  },
+  {
+    keywords: ['time', 'how long', 'duration', 'delivery time', 'speed'],
+    response: "Delivery times depend on the distance between rooms and corridor traffic. The average delivery time is approximately 4-5 minutes within the faculty building. The robot navigates autonomously using ROS2 path planning and obstacle avoidance."
+  },
+  {
+    keywords: ['safe', 'security', 'secure', 'privacy', 'data'],
+    response: "OfficeMate ensures security through:\n🔐 RFID-authenticated locker access — only the sender and recipient can open the compartment\n🔒 Password-protected user accounts\n📧 Email-based password reset with expiring tokens\n👤 Role-based access control (Lecturer vs Admin)\n\nAll data is stored securely in MongoDB Atlas."
+  },
+  {
+    keywords: ['error', 'problem', 'issue', 'bug', 'not working', 'broken', 'fix'],
+    response: "If you're experiencing issues:\n1️⃣ Check if the ROS Bridge is connected (green indicator on Dashboard)\n2️⃣ Try logging out and back in\n3️⃣ Clear your browser cache\n4️⃣ Check your internet connection\n5️⃣ Contact the system administrator if the problem persists\n\nFor 'Network Error' messages, ensure the backend server is running."
+  },
+];
+
+/**
+ * Finds the best matching response from the knowledge base.
+ */
+function findResponse(input, isRosConnected) {
+  const lower = input.toLowerCase().trim();
+  
+  // Score each topic by how many keywords match
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const topic of KNOWLEDGE_BASE) {
+    let score = 0;
+    for (const keyword of topic.keywords) {
+      if (lower.includes(keyword)) {
+        score += keyword.split(' ').length; // Multi-word keywords score higher
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = topic;
+    }
+  }
+
+  if (bestMatch && bestScore > 0) {
+    return bestMatch.response;
+  }
+
+  // Smart fallback — provide helpful suggestions
+  return `I'm not sure I have a specific answer for that, but I'd love to help! Here are some things you can ask me about:\n\n• "How do I send a delivery?"\n• "Where is the robot?"\n• "How does RFID work?"\n• "How do I reset my password?"\n• "What departments are supported?"\n• "What is the tech stack?"\n\nOr just type 'help' to see everything I can assist with!`;
+}
+
 export default function ChatAgent() {
   const { isRosConnected } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { id: 1, text: "Hello! I am your OfficeMate assistant. How can I help you today?", isUser: false }
+    { id: 1, text: "Hello! 👋 I'm your OfficeMate assistant. Ask me anything about deliveries, the robot, your account, or the system!", isUser: false }
   ]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
@@ -28,38 +189,18 @@ export default function ChatAgent() {
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
 
-    // Simulated AI response
+    // Generate AI response
     setTimeout(() => {
-      let botText = "I'm sorry, I didn't quite catch that. Try asking about 'robot status', 'delivery', or 'help'.";
-      const lowerInput = userMessage.text.toLowerCase();
-      
-      if (lowerInput.includes('status') || lowerInput.includes('where is')) {
-        botText = isRosConnected
-          ? "The OfficeMate robot is currently connected to ROS and ready for delivery at the Dean's Office."
-          : "The OfficeMate robot is currently offline (ROS bridge disconnected).";
-      } else if (lowerInput.includes('delivery') || lowerInput.includes('send')) {
-        botText = "To send a delivery, navigate to 'Create Delivery' on the sidebar, select the recipient, and load the documents.";
-      } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
-        botText = "Hi there! Let me know if you need help with your account or tracking a delivery.";
-      } else if (lowerInput.includes('help')) {
-        botText = "I can answer questions about the robot's status, guide you through creating a delivery, or help you with your account (login, register, reset password).";
-      } else if (lowerInput.includes('login') || lowerInput.includes('sign in')) {
-        botText = "To log in, use your University Email and password. If you don't have an account, click 'Create an Account' below.";
-      } else if (lowerInput.includes('register') || lowerInput.includes('create account')) {
-        botText = "You can register by clicking 'Create an Account'. Note: Currently, only staff from the Department of Information Technology can register.";
-      } else if (lowerInput.includes('password') || lowerInput.includes('reset') || lowerInput.includes('forgot')) {
-        botText = "If you forgot your password, click 'Forgot Password?' on the login screen to receive a reset link via your university email.";
-      }
-
+      const botText = findResponse(userMessage.text, isRosConnected);
       setMessages((prev) => [...prev, { id: Date.now() + 1, text: botText, isUser: false }]);
-    }, 1000);
+    }, 800);
   };
 
   return (
     <div className="fixed bottom-6 right-6 z-50 font-sans">
       {/* Chat Window */}
       {isOpen && (
-        <div className="absolute bottom-16 right-0 w-80 sm:w-96 glass-card border border-slate-200/50 shadow-2xl rounded-2xl overflow-hidden flex flex-col mb-4 animate-fade-in-up" style={{ height: '400px' }}>
+        <div className="absolute bottom-16 right-0 w-80 sm:w-96 glass-card border border-slate-200/50 shadow-2xl rounded-2xl overflow-hidden flex flex-col mb-4 animate-fade-in-up" style={{ height: '450px' }}>
           
           {/* Header */}
           <div className="bg-blue-600 p-4 text-white flex justify-between items-center shadow-md relative z-10">
@@ -86,7 +227,7 @@ export default function ChatAgent() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 backdrop-blur-sm">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm whitespace-pre-line ${
                   msg.isUser 
                     ? 'bg-blue-600 text-white rounded-br-sm' 
                     : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm'
@@ -105,7 +246,7 @@ export default function ChatAgent() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask about deliveries or status..."
+                placeholder="Ask me anything..."
                 className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-xl pl-4 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
               <button 

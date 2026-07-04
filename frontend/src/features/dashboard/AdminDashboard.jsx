@@ -1,56 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '../components/DashboardLayout';
-import API from '../api';
-import { useAuth } from '../context/AuthContext';
-
-const DELIVERY_STATES = [
-  { key: 'Requested',            label: 'Requested',         icon: '📋' },
-  { key: 'Heading to Sender',    label: 'To Sender',         icon: '🚗' },
-  { key: 'Heading to Recipient', label: 'En Route',          icon: '📦' },
-  { key: 'Awaiting Pickup',      label: 'Awaiting Pickup',   icon: '⏳' },
-  { key: 'Completed',            label: 'Completed',         icon: '🎉' },
-];
-
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'Completed':            return 'bg-emerald-50 text-emerald-600 border-emerald-200';
-    case 'Cancelled':            return 'bg-red-50 text-red-500 border-red-200';
-    case 'Awaiting Pickup':      return 'bg-indigo-50 text-indigo-600 border-indigo-200 animate-pulse';
-    case 'Heading to Sender':
-    case 'Heading to Recipient': return 'bg-blue-50 text-blue-600 border-blue-200 animate-pulse';
-    case 'Confirmed':            return 'bg-teal-50 text-teal-600 border-teal-200';
-    default:                     return 'bg-amber-50 text-amber-600 border-amber-200';
-  }
-};
+import DashboardLayout from '../../layouts/DashboardLayout';
+import API from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
+import useRobotStatus from '../../hooks/useRobotStatus';
+import { DELIVERY_STATES } from '../../constants';
+import { getStatusColor } from '../../utils/helpers';
 
 export default function AdminDashboard() {
   const { deliveryRequests, fetchDeliveries, addNotification, isRosConnected } = useAuth();
   const [loading, setLoading] = useState(true);
-
-  const [robotStatus, setRobotStatus] = useState({
-    currentLocation: "Dean's Office",
-    status: 'Idle',
-    batteryLevel: 100,
-  });
-
+  const robotStatus = useRobotStatus();
   const [radarAngle, setRadarAngle] = useState(0);
-
-  const fetchRobotStatus = async () => {
-    try {
-      const response = await API.get('/robot/status');
-      if (response.data.success) setRobotStatus(response.data.data);
-    } catch { /* optional endpoint */ }
-  };
 
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchDeliveries(), fetchRobotStatus()]);
+      await fetchDeliveries();
       setLoading(false);
     };
     init();
 
-    const dataInterval = setInterval(() => { fetchDeliveries(); fetchRobotStatus(); }, 5000);
+    const dataInterval = setInterval(fetchDeliveries, 5000);
     const radarInterval = setInterval(() => setRadarAngle(prev => (prev + 3) % 360), 30);
 
     return () => { clearInterval(dataInterval); clearInterval(radarInterval); };
@@ -99,8 +69,7 @@ export default function AdminDashboard() {
       default: return;
     }
     try {
-      const res = await API.post('/robot/update', updatedFields);
-      if (res.data.success) setRobotStatus(res.data.data);
+      await API.post('/robot/update', updatedFields);
     } catch { /* ignore */ }
   };
 

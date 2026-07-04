@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ChatAgent from './ChatAgent';
+import { getInitials } from '../utils/helpers';
+import ChatAgent from '../components/ChatAgent';
 
 export default function DashboardLayout({ children, isAdmin = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, notifications, activePopup, closePopup } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
-
-  const getInitials = (name) => {
-    if (!name) return "US";
-    const parts = name.split(' ');
-    if (parts.length > 1) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  };
 
   const handleLogout = () => {
     logout();

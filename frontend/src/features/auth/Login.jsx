@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import AuthLayout from '../components/AuthLayout';
-import ChatAgent from '../components/ChatAgent';
-import API from '../api';
+import { useAuth } from '../../context/AuthContext';
+import AuthLayout from '../../layouts/AuthLayout';
+import ChatAgent from '../../components/ChatAgent';
+import API from '../../config/api';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,8 +36,10 @@ export default function Login() {
       }
     } catch (error) {
       let msg = error.response?.data?.error || error.response?.data?.message || error.message || 'Login failed. Please check your credentials.';
-      if (error.message === 'Network Error') {
-        msg = 'Network Error: Cannot connect to the backend server. Please check your VITE_API_URL configuration on Vercel or ensure the backend is running.';
+      if (error.friendlyMessage) {
+        msg = error.friendlyMessage;
+      } else if (error.message === 'Network Error') {
+        msg = 'Cannot connect to the server. Please check your network connection or try again later.';
       }
       setErrorMsg(msg);
     } finally {
@@ -74,7 +76,7 @@ export default function Login() {
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">
-              University Email
+              Staff Email
             </label>
             <div className="relative group">
               <span className="absolute left-4 top-3.5 text-slate-400 text-sm transition-colors group-focus-within:text-blue-500">📧</span>

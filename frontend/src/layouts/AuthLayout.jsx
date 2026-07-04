@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { APP_VERSION } from '../constants';
 
 export default function AuthLayout({ children }) {
   const location = useLocation();
@@ -56,7 +57,7 @@ export default function AuthLayout({ children }) {
                 Recover Your <br/> Access.
               </h1>
               <p className="text-blue-200/80 text-base leading-relaxed">
-                Confirm your workplace email to reset your login password and regain access to the robot dashboard.
+                Confirm your staff email to reset your login password and regain access to the robot dashboard.
               </p>
             </>
           ) : (
@@ -75,10 +76,9 @@ export default function AuthLayout({ children }) {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="text-blue-300/50 text-sm font-medium z-10 flex items-center justify-between">
-          <span>OfficeMate v2.4</span>
-          <span>&copy; {new Date().getFullYear()}</span>
+        {/* Footer — Combined version */}
+        <div className="text-blue-300/50 text-sm font-medium z-10">
+          <span>{APP_VERSION}</span>
         </div>
       </div>
 

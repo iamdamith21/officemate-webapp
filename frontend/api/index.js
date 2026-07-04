@@ -48,6 +48,24 @@ app.use('/deliveries', deliveryRoutes);
 app.use('/api/robot', robotRoutes);         // Robot live status updates
 app.use('/robot', robotRoutes);
 
+// Health Check Endpoint — useful for debugging Vercel deployments
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'OfficeMate API is healthy.',
+    mongoConnected: mongoose.connection.readyState === 1,
+    timestamp: new Date().toISOString()
+  });
+});
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'OfficeMate API is healthy.',
+    mongoConnected: mongoose.connection.readyState === 1,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Root API Endpoint
 app.get('/api', (req, res) => {
   res.send('🚀 OfficeMate Backend Server is running successfully.');
