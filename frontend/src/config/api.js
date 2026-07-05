@@ -6,7 +6,7 @@ import axios from 'axios';
 // In development, requests go to the local Express server.
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_URL || '/api'),
   headers: {
     'Content-Type': 'application/json',
   },
