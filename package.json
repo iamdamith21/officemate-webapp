@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev:backend": "nodemon api/index.js",
-    "dev:ros": "node scripts/mock_ros.js",
+    "dev:ros": "node scripts/mock_ros.cjs",
     "dev:frontend": "vite",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:ros\" \"npm run dev:frontend\"",
     "build": "vite build",

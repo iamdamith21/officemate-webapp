@@ -141,7 +141,10 @@ export default function CreateDelivery() {
             <div className="bg-white/60 p-4 rounded-2xl border border-blue-100">
               <span className="block text-[10px] font-black uppercase text-blue-500 mb-1">Step 3</span>
               <p className="font-bold text-slate-700 mb-1">Dispatch</p>
-              <p className="text-xs text-slate-500">The system syncs with the Raspberry Pi ROS. The robot travels to your room for pickup.</p>
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex items-start space-x-3">
+              <span className="text-xl">🤖</span>
+              <p className="text-xs text-slate-500">The system syncs with the Robot Hardware. The robot travels to your room for pickup. Please ensure you are ready.</p>
+            </div>
             </div>
             <div className="bg-white/60 p-4 rounded-2xl border border-blue-100">
               <span className="block text-[10px] font-black uppercase text-blue-500 mb-1">Step 4</span>

@@ -31,7 +31,7 @@ const KNOWLEDGE_BASE = [
   },
   {
     keywords: ['ros', 'rosbridge', 'hardware', 'raspberry pi', 'pi', 'connection', 'offline', 'online'],
-    response: "OfficeMate connects to the physical robot via ROS Bridge (WebSocket on port 9090). The connection status is shown as a green 'ROS Sync Active' or red 'ROS Offline' indicator. If it shows offline, the Raspberry Pi or ROS bridge server may not be running. Contact your system administrator."
+    response: "OfficeMate connects to the physical robot via Robot Connection (WebSocket on port 9090). The connection status is shown as a green 'Robot Sync Active' or red 'Robot Offline' indicator. If it shows offline, the Raspberry Pi or ROS bridge server may not be running. Contact your system administrator."
   },
   // ── Delivery Workflow ──
   {
@@ -106,7 +106,7 @@ const KNOWLEDGE_BASE = [
   },
   {
     keywords: ['how does it work', 'technology', 'tech stack', 'system', 'architecture'],
-    response: "OfficeMate uses:\n🌐 React + Vite frontend with Tailwind CSS\n⚡ Node.js/Express backend with MongoDB Atlas\n🤖 ROS2 (Robot Operating System) on Raspberry Pi\n📡 WebSocket connection via ROS Bridge\n🔐 RFID authentication for locker access\n☁️ Deployed on Vercel (frontend + serverless API)"
+    response: "OfficeMate uses:\n🌐 React + Vite frontend with Tailwind CSS\n⚡ Node.js/Express backend with MongoDB Atlas\n🤖 Robot Hardware Control System on Raspberry Pi\n📡 WebSocket connection via Robot Connection\n🔐 RFID authentication for locker access\n☁️ Deployed on Vercel (frontend + serverless API)"
   },
   // ── Misc ──
   {
@@ -119,7 +119,7 @@ const KNOWLEDGE_BASE = [
   },
   {
     keywords: ['time', 'how long', 'duration', 'delivery time', 'speed'],
-    response: "Delivery times depend on the distance between rooms and corridor traffic. The average delivery time is approximately 4-5 minutes within the faculty building. The robot navigates autonomously using ROS2 path planning and obstacle avoidance."
+    response: "Delivery times depend on the distance between rooms and corridor traffic. The average delivery time is approximately 4-5 minutes within the faculty building. The robot navigates autonomously using autonomous path planning and obstacle avoidance."
   },
   {
     keywords: ['safe', 'security', 'secure', 'privacy', 'data'],
@@ -127,7 +127,7 @@ const KNOWLEDGE_BASE = [
   },
   {
     keywords: ['error', 'problem', 'issue', 'bug', 'not working', 'broken', 'fix'],
-    response: "If you're experiencing issues:\n1️⃣ Check if the ROS Bridge is connected (green indicator on Dashboard)\n2️⃣ Try logging out and back in\n3️⃣ Clear your browser cache\n4️⃣ Check your internet connection\n5️⃣ Contact the system administrator if the problem persists\n\nFor 'Network Error' messages, ensure the backend server is running."
+    response: "If you're experiencing issues:\n1️⃣ Check if the Robot Connection is connected (green indicator on Dashboard)\n2️⃣ Try logging out and back in\n3️⃣ Clear your browser cache\n4️⃣ Check your internet connection\n5️⃣ Contact the system administrator if the problem persists\n\nFor 'Network Error' messages, ensure the backend server is running."
   },
 ];
 

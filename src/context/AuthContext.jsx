@@ -21,24 +21,24 @@ export function AuthProvider({ children }) {
     let reconnectTimeout;
 
     const connectRos = () => {
-      console.log('Attempting to connect to ROS Bridge...');
+      console.log('Attempting to connect to Robot Connection...');
       ros = new ROSLIB.Ros({
         url: import.meta.env.VITE_ROS_BRIDGE_URL || 'ws://localhost:9090'
       });
 
       ros.on('connection', () => {
         setIsRosConnected(true);
-        console.log('ROS Bridge connection established successfully.');
+        console.log('Robot Connection connection established successfully.');
       });
 
       ros.on('error', (error) => {
         setIsRosConnected(false);
-        console.log('ROS Bridge connection error:', error);
+        console.log('Robot Connection connection error:', error);
       });
 
       ros.on('close', () => {
         setIsRosConnected(false);
-        console.log('ROS Bridge connection closed. Retrying in 5 seconds...');
+        console.log('Robot Connection connection closed. Retrying in 5 seconds...');
         reconnectTimeout = setTimeout(connectRos, 5000);
       });
     };

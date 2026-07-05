@@ -143,7 +143,7 @@ export default function UserDashboard() {
           <div className={`flex items-center space-x-3 bg-white/60 backdrop-blur-md border px-5 py-2.5 rounded-2xl shadow-sm ${isRosConnected ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
             <span className={`h-2.5 w-2.5 rounded-full shadow-sm ${isRosConnected ? 'bg-emerald-500 animate-ping shadow-emerald-500' : 'bg-red-500 shadow-red-500'}`} />
             <span className={`text-xs font-bold uppercase tracking-wider ${isRosConnected ? 'text-emerald-600' : 'text-red-600'}`}>
-              {isRosConnected ? 'ROS Sync Active' : 'ROS Offline'}
+              {isRosConnected ? 'Robot Sync Active' : 'Robot Offline'}
             </span>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function UserDashboard() {
           {!isRosConnected && (
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 backdrop-blur-md rounded-3xl border border-red-100 shadow-inner">
               <span className="text-5xl mb-4 animate-bounce">⚠️</span>
-              <h4 className="font-bold text-red-600 text-xl tracking-tight">ROS Bridge Offline</h4>
+              <h4 className="font-bold text-red-600 text-xl tracking-tight">Robot Connection Offline</h4>
               <p className="text-sm text-slate-600 font-medium mt-1">Robot tracking is disabled until hardware connection is restored.</p>
             </div>
           )}
@@ -271,7 +271,7 @@ export default function UserDashboard() {
                   <span className="text-xs text-slate-400 uppercase font-semibold tracking-widest block mb-1.5">Hardware Sync</span>
                   <p className={`font-bold flex items-center text-sm ${isRosConnected ? 'text-emerald-400' : 'text-red-400'}`}>
                     <span className="mr-2 text-lg">{isRosConnected ? '🟢' : '🔴'}</span> 
-                    {isRosConnected ? 'ROS Linked' : 'ROS Offline'}
+                    {isRosConnected ? 'Robot Linked' : 'Robot Offline'}
                   </p>
                 </div>
               </div>

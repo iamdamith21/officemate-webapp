@@ -12,14 +12,14 @@ export default function Analytics() {
 
   const totalRequests = deliveryRequests.length;
   const completedRequests = deliveryRequests.filter(d => d.status === 'Completed').length;
-  const successRate = totalRequests > 0 ? ((completedRequests / totalRequests) * 100).toFixed(1) : '100';
+  const successRate = totalRequests > 0 ? ((completedRequests / totalRequests) * 100).toFixed(1) : '0';
 
   const deliveryData = [
-    { name: 'Mon', Deliveries: 12 },
-    { name: 'Tue', Deliveries: 19 },
-    { name: 'Wed', Deliveries: 15 },
-    { name: 'Thu', Deliveries: 22 },
-    { name: 'Fri', Deliveries: 25 },
+    { name: 'Mon', Deliveries: 0 },
+    { name: 'Tue', Deliveries: 0 },
+    { name: 'Wed', Deliveries: 0 },
+    { name: 'Thu', Deliveries: 0 },
+    { name: 'Fri', Deliveries: 0 },
   ];
 
   return (
@@ -38,8 +38,8 @@ export default function Analytics() {
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest relative z-10">Total Deliveries</span>
             <p className="text-4xl font-black text-slate-800 relative z-10">{totalRequests}</p>
-            <span className="text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-2 relative z-10">
-              <span className="text-emerald-500">↑</span> 12% increase this week
+            <span className="text-[10px] text-slate-400 font-extrabold flex items-center gap-1 mt-2 relative z-10">
+              No recent activity
             </span>
           </div>
           
@@ -55,9 +55,9 @@ export default function Analytics() {
           <div className="glass-card p-6 rounded-3xl shadow-sm space-y-1 relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest relative z-10">Avg Delivery Time</span>
-            <p className="text-4xl font-black text-slate-800 relative z-10">4.2 <span className="text-xl text-slate-400">min</span></p>
-            <span className="text-[10px] text-amber-600 font-extrabold flex items-center gap-1 mt-2 relative z-10">
-              ⚠️ Traffic delay in Hallway B
+            <p className="text-4xl font-black text-slate-800 relative z-10">0 <span className="text-xl text-slate-400">min</span></p>
+            <span className="text-[10px] text-emerald-600 font-extrabold flex items-center gap-1 mt-2 relative z-10">
+              Pathways clear
             </span>
           </div>
         </div>
