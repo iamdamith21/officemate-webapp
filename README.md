@@ -6,18 +6,17 @@ OfficeMate is a modern web application designed for campus offices and universit
 
 ```
 officemate-webapp/
-├── package.json         # Root package configuration & orchestration scripts
+├── package.json         # Unified dependencies & orchestration scripts
 ├── README.md            # Project documentation & configuration guide
-├── backend/             # Express.js backend server with MongoDB integration
-│   ├── .env             # Backend environment settings
-│   ├── server.js        # Main entry point
+├── .env                 # Application environment settings
+├── api/                 # Backend logic & Vercel Serverless Functions
+│   ├── index.js         # Main backend entry point
 │   ├── models/          # Mongoose database models
 │   └── routes/          # API route definitions
-└── frontend/            # React + Vite frontend application
-    ├── index.html       # Single-page template
-    ├── package.json     # Frontend dependencies & build commands
-    ├── tailwind.config.js
-    └── src/             # Frontend source code
+├── scripts/             # Utility scripts (e.g., clear_db.js, mock_ros.js)
+├── src/                 # React frontend application source code
+├── public/              # Static frontend assets
+└── vite.config.js       # Vite bundler configuration
 ```
 
 ## Getting Started
@@ -29,15 +28,15 @@ officemate-webapp/
 
 ### Installation
 
-Install all workspace dependencies (root, backend, and frontend) using the helper script:
+Install all project dependencies using npm:
 
 ```bash
-npm run install:all
+npm install
 ```
 
 ### Environment Configuration
 
-Configure the backend database connection and mailer settings. Create/modify the `.env` file in the `backend/` directory:
+Configure the backend database connection and mailer settings. Create or modify the `.env` file at the root directory:
 
 ```env
 PORT=5000
@@ -50,9 +49,9 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 ```
 
-### Running the Application
+### Running the Application Locally
 
-To start both the backend server and the frontend client concurrently, run:
+To start both the backend API server, the frontend client, and the Mock ROS server concurrently, run:
 
 ```bash
 npm run dev
@@ -65,14 +64,14 @@ This starts:
 
 ### Building for Production
 
-To build the optimized frontend production assets:
+To build the optimized frontend production assets into the `dist/` directory:
 
 ```bash
-npm run build:frontend
+npm run build
 ```
 
-To run lint checks on the frontend:
+To run lint checks on the codebase:
 
 ```bash
-npm run lint:frontend
+npm run lint
 ```
