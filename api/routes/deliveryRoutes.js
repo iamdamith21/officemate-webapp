@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const DeliveryRequest = require('../models/DeliveryRequest');
+const Employee = require('../models/Employee');
 const nodemailer = require('nodemailer');
+const { sendSms } = require('../utils/sms');
 
 // ─────────────────────────────────────────────────────────────────
 // 1. Create a Delivery Request (POST /api/deliveries/request)
@@ -14,6 +16,7 @@ router.post('/request', async (req, res) => {
       senderEmail,
       recipientEmail,
       recipientName,
+      recipientPhone,
       pickupLocation,
       deliveryDestination,
       description
@@ -55,6 +58,31 @@ router.post('/request', async (req, res) => {
     } catch (emailErr) {
       console.error('Failed to send email notification:', emailErr);
       // We don't fail the request if email fails, it just skips the email.
+    }
+
+    // Send SMS alert to recipient.
+    // Phone source: explicit recipientPhone in the payload, otherwise the
+    // phone stored on the recipient's staff account (looked up by email).
+    // Non-blocking — the request still succeeds if SMS is unconfigured or fails.
+    try {
+      let phone = recipientPhone;
+      if (!phone) {
+        const recipient = await Employee.findOne({ email: recipientEmail.toLowerCase() });
+        phone = recipient?.phone;
+      }
+
+      if (phone) {
+        await sendSms(
+          phone,
+          `OfficeMate: Hi ${recipientName}, you have a new delivery request from ${senderEmail || 'a colleague'}. ` +
+          `Item: ${description || 'N/A'}. From: ${pickupLocation}. ` +
+          `Log in to your OfficeMate dashboard to accept or decline.`
+        );
+      } else {
+        console.warn(`[SMS] No phone number on file for ${recipientEmail} — SMS skipped.`);
+      }
+    } catch (smsErr) {
+      console.error('Failed to send SMS notification:', smsErr);
     }
 
     res.status(201).json({

@@ -7,6 +7,18 @@ import useRobotStatus from '../../hooks/useRobotStatus';
 import { DELIVERY_STATES, ROOM_COORDS, BASE_COORDS } from '../../constants';
 import { getStateIndex } from '../../utils/helpers';
 
+// Extracts a first name, skipping common title prefixes
+const getFirstName = (fullName) => {
+  if (!fullName) return 'Lecturer';
+  const titlePrefixes = ['mr.', 'mrs.', 'ms.', 'miss.', 'dr.', 'prof.', 'mr', 'mrs', 'ms', 'dr', 'prof'];
+  const parts = fullName.trim().split(' ');
+  // If first part is a title, skip it and return next
+  if (titlePrefixes.includes(parts[0].toLowerCase()) && parts.length > 1) {
+    return parts[1];
+  }
+  return parts[0];
+};
+
 export default function UserDashboard() {
   const navigate = useNavigate();
   const {
@@ -134,7 +146,7 @@ export default function UserDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-2 border-b border-slate-200/50">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
-              Welcome, {user?.name?.split(' ')[0] || 'Lecturer'}!
+              Welcome, {getFirstName(user?.name)}!
             </h1>
             <p className="text-slate-500 text-sm mt-2 uppercase font-semibold tracking-wider">
               {user?.department || 'Faculty of Information Technology'} — OfficeMate Robot

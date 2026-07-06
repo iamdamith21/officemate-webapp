@@ -90,9 +90,9 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // Login — now stores role, _id, and department
-  const login = (email, name, role = 'Lecturer', _id = null, department = '') => {
-    const userData = { email, name, role, _id, department };
+  // Login — now stores role, _id, department, and phone
+  const login = (email, name, role = 'Lecturer', _id = null, department = '', phone = '') => {
+    const userData = { email, name, role, _id, department, phone };
     setUser(userData);
     localStorage.setItem('officeMate_user', JSON.stringify(userData));
   };

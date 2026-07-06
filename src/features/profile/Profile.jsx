@@ -15,7 +15,8 @@ export default function Profile() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
     email: user?.email || '',
-    department: user?.department || ''
+    department: user?.department || '',
+    phone: user?.phone || ''
   });
   const [profileMsg, setProfileMsg] = useState('');
   const [profileError, setProfileError] = useState('');
@@ -27,12 +28,13 @@ export default function Profile() {
       const res = await API.put('/employees/update-profile', {
         email: user.email,
         newEmail: profileData.email,
-        newDepartment: profileData.department
+        newDepartment: profileData.department,
+        newPhone: profileData.phone
       });
       if (res.data.success) {
         setProfileMsg('Profile updated successfully!');
         // Update local context
-        login(res.data.data.email, res.data.data.name, res.data.data.role, res.data.data._id, res.data.data.department);
+        login(res.data.data.email, res.data.data.name, res.data.data.role, res.data.data._id, res.data.data.department, res.data.data.phone || '');
         setTimeout(() => setIsEditingProfile(false), 1500);
       }
     } catch (err) {
@@ -118,6 +120,14 @@ export default function Profile() {
                       <span className="text-slate-400">🏢</span> {user?.department || 'Information Technology'}
                     </span>
                   </div>
+
+                  <div className="bg-white/60 backdrop-blur-sm border border-slate-200/50 p-4 rounded-2xl shadow-sm sm:col-span-2">
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-widest block mb-1">Mobile Number</span>
+                    <span className="font-semibold text-slate-700 text-sm flex items-center gap-2">
+                      <span className="text-lg">🇱🇰</span>
+                      {user?.phone || <span className="text-slate-400 italic">Not set — add your number to receive SMS alerts</span>}
+                    </span>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleProfileUpdate} className="pt-4 border-t border-slate-200/60 w-full space-y-4">
@@ -149,6 +159,32 @@ export default function Profile() {
                         <option value="Dean's Office">Dean's Office</option>
                       </select>
                     </div>
+                  </div>
+
+                  {/* Mobile Number with SL prefix */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mobile Number</label>
+                    <p className="text-xs text-slate-500 mb-2">🇱🇰 Sri Lanka — Used to receive SMS delivery alerts</p>
+                    <div className="flex items-stretch gap-2">
+                      {/* Sri Lanka flag prefix */}
+                      <div className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 whitespace-nowrap">
+                        <span className="text-lg">🇱🇰</span> +94
+                      </div>
+                      <input
+                        type="tel"
+                        value={profileData.phone.replace(/^\+94/, '')}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/[^0-9]/g, '').slice(0, 9);
+                          setProfileData({...profileData, phone: digits ? `+94${digits}` : ''});
+                        }}
+                        placeholder="77 XXXXXXX"
+                        maxLength={9}
+                        className="flex-1 p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm tracking-widest"
+                      />
+                    </div>
+                    {profileData.phone && (
+                      <p className="mt-1 text-xs text-emerald-600 font-medium">✅ Will send as: {profileData.phone}</p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button type="submit" className="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all text-xs uppercase tracking-widest shadow-md">

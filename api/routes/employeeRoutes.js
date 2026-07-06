@@ -7,7 +7,7 @@ const Employee = require('../models/Employee');
 // ─────────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, department, rfidTag, password, role } = req.body;
+    const { name, email, phone, department, rfidTag, password, role } = req.body;
 
     const existingEmployee = await Employee.findOne({ email: email.toLowerCase() });
     if (existingEmployee) {
@@ -17,6 +17,7 @@ router.post('/register', async (req, res) => {
     const newEmployee = new Employee({
       name,
       email: email.toLowerCase(),
+      phone: phone || '',
       department,
       rfidTag: rfidTag || Array.from({ length: 4 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(' '),
       password: password || 'password123',
@@ -37,7 +38,25 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Special handler for Admin is now in api/index.js
+    // Fallback admin seeding for Vercel serverless (startup .then() may not run)
+    if (email.toLowerCase() === 'admin@uom.lk') {
+      try {
+        const adminExists = await Employee.findOne({ email: 'admin@uom.lk' });
+        if (!adminExists) {
+          await Employee.create({
+            name: 'System Admin',
+            email: 'admin@uom.lk',
+            department: "Dean's Office",
+            role: 'Admin',
+            password: 'fit@123',
+            rfidTag: 'AD 00 00 01'
+          });
+          console.log('🌱 Admin seeded via login route fallback.');
+        }
+      } catch (seedErr) {
+        console.error('Admin seed fallback error (non-fatal):', seedErr.message);
+      }
+    }
 
     const employee = await Employee.findOne({ email: email.toLowerCase() });
     if (!employee) {
@@ -56,7 +75,8 @@ router.post('/login', async (req, res) => {
         name: employee.name,
         email: employee.email,
         department: employee.department,
-        role: employee.role
+        role: employee.role,
+        phone: employee.phone || ''
       }
     });
   } catch (error) {
@@ -120,7 +140,7 @@ router.post('/change-password', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 router.put('/update-profile', async (req, res) => {
   try {
-    const { email, newEmail, newDepartment } = req.body;
+    const { email, newEmail, newDepartment, newPhone } = req.body;
     
     // Check if new email is already taken by someone else
     if (newEmail && newEmail.toLowerCase() !== email.toLowerCase()) {
@@ -137,16 +157,18 @@ router.put('/update-profile', async (req, res) => {
 
     if (newEmail) employee.email = newEmail.toLowerCase();
     if (newDepartment) employee.department = newDepartment;
-    
+    if (newPhone !== undefined) employee.phone = newPhone.trim();
+
     await employee.save();
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       message: 'Profile updated successfully.',
       data: {
         _id: employee._id,
         name: employee.name,
         email: employee.email,
+        phone: employee.phone,
         department: employee.department,
         role: employee.role
       }

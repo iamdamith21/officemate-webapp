@@ -31,22 +31,29 @@ app.use((req, res, next) => {
 });
 
 if (MONGO_URI) {
-  mongoose.connect(MONGO_URI)
+  mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 15000,
+    socketTimeoutMS: 45000
+  })
     .then(async () => {
       console.log('🍃 MongoDB Database Connected Successfully!');
-      // Seed Admin
-      const Employee = require('./models/Employee');
-      const adminExists = await Employee.findOne({ email: 'admin@uom.lk' });
-      if (!adminExists) {
-        await new Employee({
-          name: 'System Admin',
-          email: 'admin@uom.lk',
-          department: "Dean's Office",
-          role: 'Admin',
-          password: 'fit@123',
-          rfidTag: 'ADMIN_001'
-        }).save();
-        console.log('🌱 Admin account seeded.');
+      // Seed Admin — use try/catch so a seeding failure never crashes the server
+      try {
+        const Employee = require('./models/Employee');
+        const adminExists = await Employee.findOne({ email: 'admin@uom.lk' });
+        if (!adminExists) {
+          await Employee.create({
+            name: 'System Admin',
+            email: 'admin@uom.lk',
+            department: "Dean's Office",
+            role: 'Admin',
+            password: 'fit@123',
+            rfidTag: 'AD 00 00 01'  // valid hex format required by schema
+          });
+          console.log('🌱 Admin account seeded.');
+        }
+      } catch (seedErr) {
+        console.error('⚠️  Admin seeding skipped (non-fatal):', seedErr.message);
       }
     })
     .catch((err) => console.error('❌ Database Connection Error:', err));

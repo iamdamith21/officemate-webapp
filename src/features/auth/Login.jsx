@@ -25,8 +25,8 @@ export default function Login() {
       });
 
       if (response.data.success) {
-        const { _id, name, email: userEmail, role, department } = response.data.data;
-        login(userEmail, name, role, _id, department);
+        const { _id, name, email: userEmail, role, department, phone } = response.data.data;
+        login(userEmail, name, role, _id, department, phone || '');
 
         if (role === 'Admin') {
           navigate('/admin/dashboard');

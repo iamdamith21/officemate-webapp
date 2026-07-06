@@ -18,6 +18,13 @@ const EmployeeSchema = new mongoose.Schema({
     required: true,
     default: 'password123'
   },
+  phone: {
+    // Recipient's mobile in E.164 format (e.g. +9477XXXXXXX) for SMS delivery alerts.
+    // Optional — if absent, the SMS step is skipped gracefully.
+    type: String,
+    default: '',
+    trim: true
+  },
   department: {
     type: String,
     required: true,

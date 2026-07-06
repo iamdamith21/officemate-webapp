@@ -10,6 +10,7 @@ export default function Register() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     department: '',
     rfid: '',
     password: '',
@@ -53,6 +54,7 @@ export default function Register() {
       const response = await API.post('/employees/register', {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
         department: formData.department,
         rfidTag: formData.rfid.toUpperCase(),
         password: formData.password,
@@ -125,6 +127,22 @@ export default function Register() {
               value={formData.email}
               onChange={handleChange}
               placeholder="name@uom.lk"
+              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 text-sm transition"
+            />
+          </div>
+
+          {/* Row 2b: Mobile Number (for SMS delivery alerts) */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mobile Number</label>
+            <p className="text-xs text-slate-500 mb-2 font-medium bg-slate-50 p-2 rounded-lg border border-slate-200">
+              📱 Used to send you an SMS alert when someone requests a delivery to you. Include country code (e.g., +9477XXXXXXX).
+            </p>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="+9477XXXXXXX"
               className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 text-sm transition"
             />
           </div>
