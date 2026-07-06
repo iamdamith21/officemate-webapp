@@ -37,21 +37,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Special handler to auto-seed the admin if it doesn't exist
-    if (email.toLowerCase() === 'admin@uom.lk') {
-      let admin = await Employee.findOne({ email: 'admin@uom.lk' });
-      if (!admin) {
-        admin = new Employee({
-          name: 'System Admin',
-          email: 'admin@uom.lk',
-          department: "Dean's Office",
-          role: 'Admin',
-          password: 'fit@123', // Initial password
-          rfidTag: 'ADMIN_001'
-        });
-        await admin.save();
-      }
-    }
+    // Special handler for Admin is now in api/index.js
 
     const employee = await Employee.findOne({ email: email.toLowerCase() });
     if (!employee) {
@@ -130,7 +116,48 @@ router.post('/change-password', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────
-// 5. Get all Employees/Lecturers (GET /api/employees/all)
+// 5. Update Profile (PUT /api/employees/update-profile)
+// ─────────────────────────────────────────────────────────────────
+router.put('/update-profile', async (req, res) => {
+  try {
+    const { email, newEmail, newDepartment } = req.body;
+    
+    // Check if new email is already taken by someone else
+    if (newEmail && newEmail.toLowerCase() !== email.toLowerCase()) {
+      const existing = await Employee.findOne({ email: newEmail.toLowerCase() });
+      if (existing) {
+        return res.status(400).json({ success: false, message: 'Email is already in use.' });
+      }
+    }
+
+    const employee = await Employee.findOne({ email: email.toLowerCase() });
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Account not found.' });
+    }
+
+    if (newEmail) employee.email = newEmail.toLowerCase();
+    if (newDepartment) employee.department = newDepartment;
+    
+    await employee.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Profile updated successfully.',
+      data: {
+        _id: employee._id,
+        name: employee.name,
+        email: employee.email,
+        department: employee.department,
+        role: employee.role
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+// 6. Get all Employees/Lecturers (GET /api/employees/all)
 // ─────────────────────────────────────────────────────────────────
 router.get('/all', async (req, res) => {
   try {

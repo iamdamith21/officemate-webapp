@@ -32,7 +32,23 @@ app.use((req, res, next) => {
 
 if (MONGO_URI) {
   mongoose.connect(MONGO_URI)
-    .then(() => console.log('🍃 MongoDB Database Connected Successfully!'))
+    .then(async () => {
+      console.log('🍃 MongoDB Database Connected Successfully!');
+      // Seed Admin
+      const Employee = require('./models/Employee');
+      const adminExists = await Employee.findOne({ email: 'admin@uom.lk' });
+      if (!adminExists) {
+        await new Employee({
+          name: 'System Admin',
+          email: 'admin@uom.lk',
+          department: "Dean's Office",
+          role: 'Admin',
+          password: 'fit@123',
+          rfidTag: 'ADMIN_001'
+        }).save();
+        console.log('🌱 Admin account seeded.');
+      }
+    })
     .catch((err) => console.error('❌ Database Connection Error:', err));
 }
 

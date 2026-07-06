@@ -5,12 +5,40 @@ import { getInitials } from '../../utils/helpers';
 import API from '../../config/api';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    email: user?.email || '',
+    department: user?.department || ''
+  });
+  const [profileMsg, setProfileMsg] = useState('');
+  const [profileError, setProfileError] = useState('');
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setProfileMsg(''); setProfileError('');
+    try {
+      const res = await API.put('/employees/update-profile', {
+        email: user.email,
+        newEmail: profileData.email,
+        newDepartment: profileData.department
+      });
+      if (res.data.success) {
+        setProfileMsg('Profile updated successfully!');
+        // Update local context
+        login(res.data.data.email, res.data.data.name, res.data.data.role, res.data.data._id, res.data.data.department);
+        setTimeout(() => setIsEditingProfile(false), 1500);
+      }
+    } catch (err) {
+      setProfileError(err.response?.data?.message || 'Failed to update profile');
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -58,7 +86,10 @@ export default function Profile() {
               <div className="w-32 h-32 rounded-3xl bg-blue-600 text-white flex items-center justify-center text-5xl font-bold shadow-lg shadow-blue-500/20 uppercase tracking-widest ring-4 ring-blue-50">
                 {getInitials(user?.name)}
               </div>
-              <button className="absolute -bottom-3 -right-3 w-10 h-10 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-md text-slate-500 hover:text-blue-600 hover:scale-110 transition-all">
+              <button 
+                onClick={() => setIsEditingProfile(!isEditingProfile)}
+                className="absolute -bottom-3 -right-3 w-10 h-10 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-md text-slate-500 hover:text-blue-600 hover:scale-110 transition-all"
+              >
                 ✏️
               </button>
             </div>
@@ -72,21 +103,63 @@ export default function Profile() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200/60 w-full">
-                <div className="bg-white/60 backdrop-blur-sm border border-slate-200/50 p-4 rounded-2xl shadow-sm">
-                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest block mb-1">Email Address</span>
-                  <span className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-                    <span className="text-slate-400">📧</span> {user?.email || 'jane.doe@uom.lk'}
-                  </span>
+              {!isEditingProfile ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200/60 w-full">
+                  <div className="bg-white/60 backdrop-blur-sm border border-slate-200/50 p-4 rounded-2xl shadow-sm">
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-widest block mb-1">Email Address</span>
+                    <span className="font-semibold text-slate-700 text-sm flex items-center gap-2">
+                      <span className="text-slate-400">📧</span> {user?.email || 'jane.doe@uom.lk'}
+                    </span>
+                  </div>
+                  
+                  <div className="bg-white/60 backdrop-blur-sm border border-slate-200/50 p-4 rounded-2xl shadow-sm">
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-widest block mb-1">Department</span>
+                    <span className="font-semibold text-slate-700 text-sm flex items-center gap-2">
+                      <span className="text-slate-400">🏢</span> {user?.department || 'Information Technology'}
+                    </span>
+                  </div>
                 </div>
-                
-                <div className="bg-white/60 backdrop-blur-sm border border-slate-200/50 p-4 rounded-2xl shadow-sm">
-                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest block mb-1">Department</span>
-                  <span className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-                    <span className="text-slate-400">🏢</span> {user?.department || 'Information Technology'}
-                  </span>
-                </div>
-              </div>
+              ) : (
+                <form onSubmit={handleProfileUpdate} className="pt-4 border-t border-slate-200/60 w-full space-y-4">
+                  {profileError && <div className="text-red-500 text-xs font-bold p-2 bg-red-50 rounded-lg">{profileError}</div>}
+                  {profileMsg && <div className="text-emerald-500 text-xs font-bold p-2 bg-emerald-50 rounded-lg">{profileMsg}</div>}
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>
+                      <input 
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Department</label>
+                      <select
+                        value={profileData.department}
+                        onChange={(e) => setProfileData({...profileData, department: e.target.value})}
+                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        required
+                      >
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Computational Technology">Computational Technology</option>
+                        <option value="Interdisciplinary Studies">Interdisciplinary Studies</option>
+                        <option value="Dean's Office">Dean's Office</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" className="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all text-xs uppercase tracking-widest shadow-md">
+                      Save Changes
+                    </button>
+                    <button type="button" onClick={() => setIsEditingProfile(false)} className="px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all text-xs uppercase tracking-widest">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

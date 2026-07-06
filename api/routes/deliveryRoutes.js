@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const DeliveryRequest = require('../models/DeliveryRequest');
+const nodemailer = require('nodemailer');
 
 // ─────────────────────────────────────────────────────────────────
 // 1. Create a Delivery Request (POST /api/deliveries/request)
@@ -31,6 +32,30 @@ router.post('/request', async (req, res) => {
 
     await newRequest.save();
     const populated = await newRequest.populate('employeeId');
+
+    // Send email alert to recipient
+    try {
+      let transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: process.env.SMTP_PORT || 587,
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: '"OfficeMate Support" <support@officemate.uom.lk>',
+        to: recipientEmail,
+        subject: "New OfficeMate Delivery Request",
+        text: `Hello ${recipientName},\n\nYou have a new delivery request from ${senderEmail} waiting for your confirmation.\n\nDescription: ${description}\nPickup: ${pickupLocation}\nDestination: ${deliveryDestination}\n\nPlease login to your OfficeMate Dashboard to accept or decline the request.\n\nThank you,\nOfficeMate Delivery System`
+      });
+      console.log(`Email notification sent to ${recipientEmail}`);
+    } catch (emailErr) {
+      console.error('Failed to send email notification:', emailErr);
+      // We don't fail the request if email fails, it just skips the email.
+    }
 
     res.status(201).json({
       success: true,

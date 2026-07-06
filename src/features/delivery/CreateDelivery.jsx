@@ -111,7 +111,7 @@ export default function CreateDelivery() {
 
   return (
     <DashboardLayout>
-      <div className="w-full max-w-3xl mx-auto space-y-6 p-1 text-slate-700">
+      <div className="w-full max-w-5xl mx-auto space-y-6 p-1 text-slate-700">
 
         {/* Header */}
         <div>

@@ -136,16 +136,31 @@ const KNOWLEDGE_BASE = [
  */
 function findResponse(input, isRosConnected) {
   const lower = input.toLowerCase().trim();
+  const inputWords = lower.split(/\W+/).filter(w => w.length > 2);
   
-  // Score each topic by how many keywords match
   let bestMatch = null;
   let bestScore = 0;
 
   for (const topic of KNOWLEDGE_BASE) {
     let score = 0;
     for (const keyword of topic.keywords) {
+      // Exact substring match (high score)
       if (lower.includes(keyword)) {
-        score += keyword.split(' ').length; // Multi-word keywords score higher
+        score += keyword.split(' ').length * 3;
+      }
+      
+      // Word intersection match (to catch variations or reordered words)
+      const keywordWords = keyword.split(/\W+/).filter(w => w.length > 2);
+      let matchCount = 0;
+      for (const kw of keywordWords) {
+         // check if the keyword word is a substring of any input word or vice versa
+         if (inputWords.some(iw => iw.includes(kw) || kw.includes(iw))) {
+             matchCount++;
+         }
+      }
+      // If at least half the significant words in the keyword match, give points
+      if (matchCount > 0 && (matchCount >= Math.ceil(keywordWords.length / 2))) {
+          score += matchCount;
       }
     }
     if (score > bestScore) {
@@ -158,8 +173,8 @@ function findResponse(input, isRosConnected) {
     return bestMatch.response;
   }
 
-  // Smart fallback — provide helpful suggestions
-  return `I'm not sure I have a specific answer for that, but I'd love to help! Here are some things you can ask me about:\n\n• "How do I send a delivery?"\n• "Where is the robot?"\n• "How does RFID work?"\n• "How do I reset my password?"\n• "What departments are supported?"\n• "What is the tech stack?"\n\nOr just type 'help' to see everything I can assist with!`;
+  // Smart fallback
+  return `I'm not sure I understand entirely, but I'd love to help! Here are some common things you can ask me:\n\n• "How do I send a delivery?"\n• "Where is the robot?"\n• "How does RFID work?"\n• "How do I change my password?"\n\nOr just type 'help' to see everything I can assist with!`;
 }
 
 export default function ChatAgent() {

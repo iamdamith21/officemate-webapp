@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [deliveryRequests, setDeliveryRequests] = useState([]);
   const [pendingConfirmations, setPendingConfirmations] = useState([]);
+  const notifiedRequests = useRef(new Set());
 
   const [isRosConnected, setIsRosConnected] = useState(false);
   const [rosData, setRosData] = useState({
@@ -132,7 +133,30 @@ export function AuthProvider({ children }) {
       const encoded = encodeURIComponent(email);
       const response = await API.get(`/deliveries/pending-for/${encoded}`);
       if (response.data.success) {
-        setPendingConfirmations(response.data.data);
+        const incoming = response.data.data;
+        setPendingConfirmations(incoming);
+        
+        // Trigger browser notification for new requests
+        if (typeof Notification !== 'undefined') {
+          incoming.forEach(req => {
+            if (!notifiedRequests.current.has(req._id)) {
+              notifiedRequests.current.add(req._id);
+              if (Notification.permission === 'granted') {
+                new Notification('New Delivery Request', {
+                  body: `${req.senderEmail || 'A colleague'} has requested a delivery to you.`
+                });
+              } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                  if (permission === 'granted') {
+                    new Notification('New Delivery Request', {
+                      body: `${req.senderEmail || 'A colleague'} has requested a delivery to you.`
+                    });
+                  }
+                });
+              }
+            }
+          });
+        }
       }
     } catch (error) {
       console.error('Error polling pending confirmations:', error);
