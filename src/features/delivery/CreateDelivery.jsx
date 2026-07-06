@@ -98,7 +98,7 @@ export default function CreateDelivery() {
           `Your request has been sent to ${formData.recipientName}. Waiting for their confirmation.`
         );
         await fetchDeliveries();
-        alert(`✅ Request sent to ${formData.recipientName}!\n\nThey will receive a notification to confirm before the robot is dispatched.`);
+        alert(`✅ Request sent to ${formData.recipientName}. Awaiting their confirmation.`);
         navigate('/user/dashboard');
       }
     } catch (error) {
@@ -121,36 +121,23 @@ export default function CreateDelivery() {
           </p>
         </div>
 
-        {/* Workflow Info Banner */}
-        <div className="bg-blue-50 border border-blue-200 rounded-3xl p-6 text-sm text-blue-800 leading-relaxed shadow-sm">
-          <div className="flex items-center space-x-3 mb-4">
-            <span className="text-2xl">🤖</span>
-            <h3 className="font-extrabold text-lg tracking-tight">How Robotic Delivery Works</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white/60 p-4 rounded-2xl border border-blue-100">
-              <span className="block text-[10px] font-black uppercase text-blue-500 mb-1">Step 1</span>
-              <p className="font-bold text-slate-700 mb-1">Request</p>
-              <p className="text-xs text-slate-500">You fill out this form to request a document delivery to another lecturer.</p>
-            </div>
-            <div className="bg-white/60 p-4 rounded-2xl border border-blue-100">
-              <span className="block text-[10px] font-black uppercase text-blue-500 mb-1">Step 2</span>
-              <p className="font-bold text-slate-700 mb-1">Confirm</p>
-              <p className="text-xs text-slate-500">The recipient receives a pop-up and confirms they are available to receive it.</p>
-            </div>
-            <div className="bg-white/60 p-4 rounded-2xl border border-blue-100">
-              <span className="block text-[10px] font-black uppercase text-blue-500 mb-1">Step 3</span>
-              <p className="font-bold text-slate-700 mb-1">Dispatch</p>
-              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex items-start space-x-3">
-              <span className="text-xl">🤖</span>
-              <p className="text-xs text-slate-500">The system syncs with the Robot Hardware. The robot travels to your room for pickup. Please ensure you are ready.</p>
-            </div>
-            </div>
-            <div className="bg-white/60 p-4 rounded-2xl border border-blue-100">
-              <span className="block text-[10px] font-black uppercase text-blue-500 mb-1">Step 4</span>
-              <p className="font-bold text-slate-700 mb-1">Deliver</p>
-              <p className="text-xs text-slate-500">Once loaded, the robot navigates to the recipient's room for the final drop-off.</p>
-            </div>
+        {/* Workflow steps — compact stepper */}
+        <div className="bg-blue-50 border border-blue-200 rounded-3xl p-5 shadow-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { n: '1', t: 'Request', d: 'Fill this form' },
+              { n: '2', t: 'Confirm', d: 'Recipient accepts' },
+              { n: '3', t: 'Pickup', d: 'Robot collects from you' },
+              { n: '4', t: 'Deliver', d: 'Robot drops off' },
+            ].map(s => (
+              <div key={s.n} className="flex items-center gap-3">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center">{s.n}</span>
+                <div className="min-w-0">
+                  <p className="font-bold text-slate-700 text-sm leading-tight">{s.t}</p>
+                  <p className="text-xs text-slate-500 leading-tight truncate">{s.d}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

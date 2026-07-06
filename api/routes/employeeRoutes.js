@@ -249,6 +249,14 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(404).json({ success: false, message: 'No account with that email address exists.' });
     }
 
+    // Guard: if SMTP isn't configured, fail clearly instead of timing out.
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS || process.env.SMTP_USER.includes('your-email')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Email service is not configured yet. Please contact the administrator.'
+      });
+    }
+
     // Create token
     const token = crypto.randomBytes(20).toString('hex');
     employee.resetPasswordToken = token;
@@ -258,7 +266,7 @@ router.post('/forgot-password', async (req, res) => {
     // Use real SMTP credentials from .env
     let transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: process.env.SMTP_PORT || 587,
+      port: Number(process.env.SMTP_PORT) || 587,
       secure: false, // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
@@ -266,8 +274,11 @@ router.post('/forgot-password', async (req, res) => {
       },
     });
 
-    const resetUrl = `https://officemate-webapp.vercel.app/reset-password/${token}`;
-    
+    // Build the reset link from APP_BASE_URL (or the request origin) so it
+    // works in dev and production without a hard-coded domain.
+    const baseUrl = process.env.APP_BASE_URL || req.headers.origin || 'https://officemate-webapp.vercel.app';
+    const resetUrl = `${baseUrl}/reset-password/${token}`;
+
     let info = await transporter.sendMail({
       from: '"OfficeMate Support" <support@officemate.uom.lk>',
       to: employee.email,
