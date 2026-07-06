@@ -9,6 +9,7 @@ export default function DashboardLayout({ children, isAdmin = false }) {
   const location = useLocation();
   const { user, logout, notifications, activePopup, closePopup } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -52,8 +53,16 @@ export default function DashboardLayout({ children, isAdmin = false }) {
         </div>
       )}
 
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar Navigation */}
-      <div className="w-64 glass-panel border-r border-slate-200/50 flex flex-col justify-between p-6 z-20 shadow-sm relative backdrop-blur-xl">
+      <div className={`fixed inset-y-0 left-0 w-64 glass-panel border-r border-slate-200/50 flex flex-col justify-between p-6 z-40 shadow-xl md:shadow-sm md:relative transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out backdrop-blur-xl bg-white/80 md:bg-transparent`}>
         <div className="space-y-8">
           {/* Logo Brand Header */}
           <div className="flex items-center space-x-3 px-2 py-3 border-b border-slate-200/50">
@@ -109,14 +118,22 @@ export default function DashboardLayout({ children, isAdmin = false }) {
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
         
         {/* Top Navbar */}
-        <header className="h-20 glass-panel border-b border-slate-200/50 flex justify-between items-center px-8 relative z-30 shadow-sm backdrop-blur-xl">
-          <div>
-            <h2 className="text-base font-bold text-slate-700">
+        <header className="h-20 glass-panel border-b border-slate-200/50 flex justify-between items-center px-4 sm:px-8 relative z-30 shadow-sm backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="md:hidden text-slate-500 hover:text-blue-600 focus:outline-none p-2 rounded-xl hover:bg-white/60 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h2 className="text-base font-bold text-slate-700 hidden sm:block">
               {isAdmin ? 'Admin Dashboard' : 'Delivery Service'}
             </h2>
           </div>
           
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2 sm:space-x-6">
             
             {/* 🔔 Notification Bell Button with Badge */}
             <div className="relative">
@@ -162,13 +179,13 @@ export default function DashboardLayout({ children, isAdmin = false }) {
             {/* User Profile Card */}
             <button 
               onClick={() => navigate(isAdmin ? '/admin/profile' : '/user/profile')}
-              className="flex items-center space-x-4 pl-6 relative before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-px before:bg-slate-200 hover:opacity-80 transition-opacity text-left"
+              className="flex items-center space-x-4 pl-4 sm:pl-6 relative before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-px before:bg-slate-200 hover:opacity-80 transition-opacity text-left"
             >
               <div className="text-right hidden sm:block">
                 <span className="block text-sm font-bold text-slate-800">{user?.name || 'Jane Doe'}</span>
                 <span className="block text-xs text-slate-500 font-semibold mt-0.5">{user?.role || 'Employee'}</span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm uppercase shadow-sm">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm uppercase shadow-sm">
                 {getInitials(user?.name)}
               </div>
             </button>

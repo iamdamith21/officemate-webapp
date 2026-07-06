@@ -244,7 +244,7 @@ export default function UserDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
                   <div>
                     <h2 className="text-2xl font-semibold tracking-tight leading-snug">
-                      Ready to deliver for <br/><span className="font-bold text-white">{user?.name?.split(' ')[0] || 'you'}</span>.
+                      Ready to deliver for <br/><span className="font-bold text-white">{getFirstName(user?.name) || 'you'}</span>.
                     </h2>
                     <p className="text-sm text-slate-400 mt-2 font-medium">
                       Your robotic assistant at the {user?.department || 'Faculty'}.
