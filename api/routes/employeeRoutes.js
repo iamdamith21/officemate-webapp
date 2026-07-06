@@ -249,11 +249,20 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(404).json({ success: false, message: 'No account with that email address exists.' });
     }
 
-    // Guard: if SMTP isn't configured, fail clearly instead of timing out.
+    // Build the reset link from APP_BASE_URL (or the request origin) so it
+    // works in dev and production without a hard-coded domain.
+    const baseUrl = process.env.APP_BASE_URL || req.headers.origin || 'https://officemate-webapp.vercel.app';
+    const resetUrl = `${baseUrl}/reset-password/${token}`;
+
+    // Guard: if SMTP isn't configured, log the link and simulate success instead of failing.
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS || process.env.SMTP_USER.includes('your-email')) {
-      return res.status(503).json({
-        success: false,
-        message: 'Email service is not configured yet. Please contact the administrator.'
+      console.log(`\n========================================`);
+      console.log(`[DEV MODE] PASSWORD RESET LINK:`);
+      console.log(resetUrl);
+      console.log(`========================================\n`);
+      return res.status(200).json({
+        success: true,
+        message: 'Email service is not configured. (Dev Mode: Check server console for reset link)'
       });
     }
 
@@ -274,10 +283,7 @@ router.post('/forgot-password', async (req, res) => {
       },
     });
 
-    // Build the reset link from APP_BASE_URL (or the request origin) so it
-    // works in dev and production without a hard-coded domain.
-    const baseUrl = process.env.APP_BASE_URL || req.headers.origin || 'https://officemate-webapp.vercel.app';
-    const resetUrl = `${baseUrl}/reset-password/${token}`;
+
 
     let info = await transporter.sendMail({
       from: '"OfficeMate Support" <support@officemate.uom.lk>',

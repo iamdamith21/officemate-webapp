@@ -174,9 +174,6 @@ export default function Register() {
           {/* Row 2b: Mobile Number (for SMS delivery alerts) */}
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mobile Number</label>
-            <p className="text-xs text-slate-500 mb-2 font-medium bg-slate-50 p-2 rounded-lg border border-slate-200">
-              📱 Used to send you an SMS alert when someone requests a delivery to you.
-            </p>
             <div className="flex items-stretch gap-2">
               <div className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 whitespace-nowrap">
                 <span className="text-lg">🇱🇰</span> +94
@@ -199,9 +196,6 @@ export default function Register() {
           {/* Row 3: Department */}
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Department</label>
-            <p className="text-xs text-blue-600 mb-2 font-medium bg-blue-50 p-2 rounded-lg border border-blue-100">
-              ℹ️ Registrations are currently available for the Department of Information Technology only.
-            </p>
             <select
               name="department"
               required
@@ -215,6 +209,7 @@ export default function Register() {
                   key={dept} 
                   value={dept}
                   disabled={dept !== 'Department of Information Technology'}
+                  className={dept !== 'Department of Information Technology' ? 'text-slate-400' : 'text-slate-800 font-medium'}
                 >
                   {dept}
                 </option>
@@ -227,9 +222,6 @@ export default function Register() {
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
               RFID Card Number
             </label>
-            <p className="text-xs text-slate-500 mb-2 font-medium bg-slate-50 p-2 rounded-lg border border-slate-200">
-              📟 Enter the 8-digit hexadecimal code from your staff card.
-            </p>
             <input
               type="text"
               name="rfid"
