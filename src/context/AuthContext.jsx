@@ -15,6 +15,12 @@ export function AuthProvider({ children }) {
   const [pendingConfirmations, setPendingConfirmations] = useState([]);
 
   const [isRosConnected, setIsRosConnected] = useState(false);
+  const [rosData, setRosData] = useState({
+    battery: 100,
+    navStatus: 'Idle',
+    obstacleDist: 999, // default safe distance
+    lockerStatus: false // false = locked, true = unlocked
+  });
 
   useEffect(() => {
     let ros;
@@ -28,7 +34,39 @@ export function AuthProvider({ children }) {
 
       ros.on('connection', () => {
         setIsRosConnected(true);
-        console.log('Robot Connection connection established successfully.');
+        console.log('Robot Connection established successfully.');
+
+        // 1. Subscribe to Battery
+        const batteryTopic = new ROSLIB.Topic({
+          ros: ros,
+          name: '/battery_level',
+          messageType: 'std_msgs/Float32'
+        });
+        batteryTopic.subscribe(msg => setRosData(prev => ({ ...prev, battery: msg.data })));
+
+        // 2. Subscribe to Navigation Status
+        const navTopic = new ROSLIB.Topic({
+          ros: ros,
+          name: '/nav/status',
+          messageType: 'std_msgs/String'
+        });
+        navTopic.subscribe(msg => setRosData(prev => ({ ...prev, navStatus: msg.data })));
+
+        // 3. Subscribe to Obstacle Distance (Ultrasonic)
+        const obstacleTopic = new ROSLIB.Topic({
+          ros: ros,
+          name: '/ultrasonic/distance',
+          messageType: 'std_msgs/Float32'
+        });
+        obstacleTopic.subscribe(msg => setRosData(prev => ({ ...prev, obstacleDist: msg.data })));
+
+        // 4. Subscribe to Locker Status
+        const lockerTopic = new ROSLIB.Topic({
+          ros: ros,
+          name: '/locker/status',
+          messageType: 'std_msgs/Bool' // true: unlocked, false: locked
+        });
+        lockerTopic.subscribe(msg => setRosData(prev => ({ ...prev, lockerStatus: msg.data })));
       });
 
       ros.on('error', (error) => {
@@ -156,7 +194,8 @@ export function AuthProvider({ children }) {
       addNotification,
       confirmDelivery,
       declineDelivery,
-      isRosConnected
+      isRosConnected,
+      rosData
     }}>
       {children}
     </AuthContext.Provider>

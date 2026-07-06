@@ -1,10 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
 import { getInitials } from '../../utils/helpers';
+import API from '../../config/api';
 
 export default function Profile() {
   const { user } = useAuth();
+  
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [msg, setMsg] = useState('');
+  const [error, setError] = useState('');
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setMsg(''); setError('');
+    
+    if (passwords.new !== passwords.confirm) {
+      return setError("New passwords don't match.");
+    }
+    
+    try {
+      const res = await API.post('/employees/change-password', {
+        email: user.email,
+        currentPassword: passwords.current,
+        newPassword: passwords.new
+      });
+      if (res.data.success) {
+        setMsg('Password updated successfully!');
+        setPasswords({ current: '', new: '', confirm: '' });
+        setTimeout(() => setShowPasswordForm(false), 2000);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update password');
+    }
+  };
 
   return (
     <DashboardLayout isAdmin={user?.role === 'Admin'}>
@@ -66,11 +96,60 @@ export default function Profile() {
           <h3 className="text-lg font-bold text-slate-800 tracking-tight mb-1">Security Settings</h3>
           <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-6">Manage password and auth</p>
           
-          <button 
-            className="w-full sm:w-auto py-3 px-6 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm text-xs uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-2"
-          >
-            <span>🔒</span> Change Password
-          </button>
+          {!showPasswordForm ? (
+            <button 
+              onClick={() => setShowPasswordForm(true)}
+              className="w-full sm:w-auto py-3 px-6 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm text-xs uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <span>🔒</span> Change Password
+            </button>
+          ) : (
+            <form onSubmit={handlePasswordChange} className="space-y-4 max-w-sm mt-4 bg-white/50 p-6 rounded-2xl border border-slate-200/50">
+              {error && <div className="text-red-500 text-xs font-bold p-2 bg-red-50 rounded-lg">{error}</div>}
+              {msg && <div className="text-emerald-500 text-xs font-bold p-2 bg-emerald-50 rounded-lg">{msg}</div>}
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Current Password</label>
+                <input 
+                  type="password" 
+                  value={passwords.current}
+                  onChange={e => setPasswords({...passwords, current: e.target.value})}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">New Password</label>
+                <input 
+                  type="password" 
+                  value={passwords.new}
+                  onChange={e => setPasswords({...passwords, new: e.target.value})}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  required
+                  minLength={6}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Confirm New Password</label>
+                <input 
+                  type="password" 
+                  value={passwords.confirm}
+                  onChange={e => setPasswords({...passwords, confirm: e.target.value})}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  required
+                  minLength={6}
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all text-xs uppercase tracking-widest shadow-md">
+                  Update
+                </button>
+                <button type="button" onClick={() => { setShowPasswordForm(false); setError(''); setMsg(''); }} className="flex-1 py-2.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all text-xs uppercase tracking-widest">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
       </div>

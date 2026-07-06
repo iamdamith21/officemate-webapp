@@ -7,7 +7,7 @@ import { DELIVERY_STATES } from '../../constants';
 import { getStatusColor } from '../../utils/helpers';
 
 export default function AdminDashboard() {
-  const { deliveryRequests, fetchDeliveries, addNotification, isRosConnected } = useAuth();
+  const { deliveryRequests, fetchDeliveries, addNotification, isRosConnected, rosData } = useAuth();
   const [loading, setLoading] = useState(true);
   const robotStatus = useRobotStatus();
   const [radarAngle, setRadarAngle] = useState(0);
@@ -134,9 +134,9 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-bold text-slate-800 mt-1 mb-5">Status Check</h3>
             <div className="space-y-4 text-xs font-semibold">
               {[
-                { label: 'Navigation System', status: isRosConnected ? '🟢 Operational' : '🔴 Offline', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
-                { label: 'Obstacle Sensors', status: isRosConnected ? '🟢 Connected' : '🔴 Disconnected', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
-                { label: 'Locker Lock/Unlock', status: isRosConnected ? '🟢 Secured' : '🔴 Offline', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
+                { label: 'Navigation System', status: isRosConnected ? `🟢 ${rosData.navStatus}` : '🔴 Offline', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
+                { label: 'Obstacle Sensors', status: isRosConnected ? (rosData.obstacleDist < 50 ? `🟡 ${rosData.obstacleDist.toFixed(1)}cm` : '🟢 CLEAR') : '🔴 Disconnected', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
+                { label: 'Locker Status', status: isRosConnected ? (rosData.lockerStatus ? '🟡 UNLOCKED' : '🟢 SECURED') : '🔴 Offline', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
               ].map(item => (
                 <div key={item.label} className="flex justify-between items-center border-b border-slate-100 pb-2.5">
                   <span className="text-slate-500">{item.label}</span>
@@ -150,11 +150,11 @@ export default function AdminDashboard() {
                 <div className="flex items-center space-x-2">
                   <div className="w-24 bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
                     <div
-                      className={`h-full rounded-full ${robotStatus.batteryLevel > 30 ? 'bg-emerald-500' : 'bg-red-500'}`}
-                      style={{ width: `${robotStatus.batteryLevel}%` }}
+                      className={`h-full rounded-full ${(isRosConnected ? rosData.battery : robotStatus.batteryLevel) > 30 ? 'bg-emerald-500' : 'bg-red-500'}`}
+                      style={{ width: `${Math.round(isRosConnected ? rosData.battery : robotStatus.batteryLevel)}%` }}
                     />
                   </div>
-                  <span className="text-xs font-bold text-slate-700">{robotStatus.batteryLevel}%</span>
+                  <span className="text-xs font-bold text-slate-700">{Math.round(isRosConnected ? rosData.battery : robotStatus.batteryLevel)}%</span>
                 </div>
               </div>
             </div>

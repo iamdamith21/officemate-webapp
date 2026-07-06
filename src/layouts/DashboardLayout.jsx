@@ -160,7 +160,10 @@ export default function DashboardLayout({ children, isAdmin = false }) {
             </div>
 
             {/* User Profile Card */}
-            <div className="flex items-center space-x-4 pl-6 relative before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-px before:bg-slate-200">
+            <button 
+              onClick={() => navigate(isAdmin ? '/admin/profile' : '/user/profile')}
+              className="flex items-center space-x-4 pl-6 relative before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-px before:bg-slate-200 hover:opacity-80 transition-opacity text-left"
+            >
               <div className="text-right hidden sm:block">
                 <span className="block text-sm font-bold text-slate-800">{user?.name || 'Jane Doe'}</span>
                 <span className="block text-xs text-slate-500 font-semibold mt-0.5">{user?.role || 'Employee'}</span>
@@ -168,7 +171,7 @@ export default function DashboardLayout({ children, isAdmin = false }) {
               <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm uppercase shadow-sm">
                 {getInitials(user?.name)}
               </div>
-            </div>
+            </button>
           </div>
         </header>
 

@@ -37,19 +37,20 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Hardcoded Admin Login Check
-    if (email.toLowerCase() === 'admin@uom.lk' && password === 'fit@123') {
-      return res.status(200).json({
-        success: true,
-        message: 'Admin Login successful.',
-        data: {
-          _id: '60c72b2f9b1d8b3a4c8e1a12', // dummy ObjectId format for frontend
+    // Special handler to auto-seed the admin if it doesn't exist
+    if (email.toLowerCase() === 'admin@uom.lk') {
+      let admin = await Employee.findOne({ email: 'admin@uom.lk' });
+      if (!admin) {
+        admin = new Employee({
           name: 'System Admin',
           email: 'admin@uom.lk',
           department: "Dean's Office",
-          role: 'Admin'
-        }
-      });
+          role: 'Admin',
+          password: 'fit@123', // Initial password
+          rfidTag: 'ADMIN_001'
+        });
+        await admin.save();
+      }
     }
 
     const employee = await Employee.findOne({ email: email.toLowerCase() });
@@ -104,7 +105,32 @@ router.post('/verify-rfid', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────
-// 4. Get all Employees/Lecturers (GET /api/employees/all)
+// 4. Change Password (POST /api/employees/change-password)
+// ─────────────────────────────────────────────────────────────────
+router.post('/change-password', async (req, res) => {
+  try {
+    const { email, currentPassword, newPassword } = req.body;
+    
+    const employee = await Employee.findOne({ email: email.toLowerCase() });
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Account not found.' });
+    }
+
+    if (employee.password !== currentPassword) {
+      return res.status(401).json({ success: false, message: 'Incorrect current password.' });
+    }
+
+    employee.password = newPassword;
+    await employee.save();
+
+    res.status(200).json({ success: true, message: 'Password updated successfully.' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+// 5. Get all Employees/Lecturers (GET /api/employees/all)
 // ─────────────────────────────────────────────────────────────────
 router.get('/all', async (req, res) => {
   try {
@@ -116,7 +142,7 @@ router.get('/all', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────
-// 5. Find Employee by Email (GET /api/employees/find/:email)
+// 6. Find Employee by Email (GET /api/employees/find/:email)
 //    Used by CreateDelivery to resolve recipient email to a name.
 // ─────────────────────────────────────────────────────────────────
 router.get('/find/:email', async (req, res) => {
@@ -132,7 +158,7 @@ router.get('/find/:email', async (req, res) => {
   }
 });
 // ─────────────────────────────────────────────────────────────────
-// 6. Forgot Password (POST /api/employees/forgot-password)
+// 7. Forgot Password (POST /api/employees/forgot-password)
 // ─────────────────────────────────────────────────────────────────
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
@@ -182,7 +208,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────
-// 7. Reset Password (POST /api/employees/reset-password)
+// 8. Reset Password (POST /api/employees/reset-password)
 // ─────────────────────────────────────────────────────────────────
 router.post('/reset-password', async (req, res) => {
   try {
