@@ -249,6 +249,12 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(404).json({ success: false, message: 'No account with that email address exists.' });
     }
 
+    // Create token
+    const token = crypto.randomBytes(20).toString('hex');
+    employee.resetPasswordToken = token;
+    employee.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await employee.save();
+
     // Build the reset link from APP_BASE_URL (or the request origin) so it
     // works in dev and production without a hard-coded domain.
     const baseUrl = process.env.APP_BASE_URL || req.headers.origin || 'https://officemate-webapp.vercel.app';
@@ -266,11 +272,7 @@ router.post('/forgot-password', async (req, res) => {
       });
     }
 
-    // Create token
-    const token = crypto.randomBytes(20).toString('hex');
-    employee.resetPasswordToken = token;
-    employee.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-    await employee.save();
+
 
     // Use real SMTP credentials from .env
     let transporter = nodemailer.createTransport({

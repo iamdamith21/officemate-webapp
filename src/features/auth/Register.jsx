@@ -118,19 +118,17 @@ export default function Register() {
         {verifyInfo && (
           <div className="mb-6 p-5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 shadow-sm">
             <div className="flex items-center space-x-3 mb-2">
-              <span className="text-2xl">📞</span>
-              <h3 className="font-extrabold text-base tracking-tight">Verify your mobile for SMS alerts</h3>
+              <span className="text-2xl">📱</span>
+              <h3 className="font-extrabold text-base tracking-tight">You're verified on Twilio!</h3>
             </div>
             <p className="text-sm leading-relaxed mb-3">
-              Twilio is calling <span className="font-bold">{verifyInfo.phone}</span> now. Answer the call and,
-              when prompted, enter this verification code on your phone keypad:
+              We've successfully registered <span className="font-bold">{verifyInfo.phone}</span>. You will get an update from Twilio saying you are verified.
             </p>
-            <div className="text-center bg-white border border-blue-200 rounded-xl py-3 mb-3">
-              <span className="text-3xl font-black tracking-[0.3em] text-blue-700">{verifyInfo.code}</span>
+            <div className="text-center bg-white border border-emerald-200 rounded-xl py-3 mb-3">
+              <span className="text-xl font-bold text-emerald-600">✅ Verified</span>
             </div>
-            <p className="text-xs text-blue-700 mb-4">
-              Once verified, you'll receive an SMS whenever someone sends you a delivery. You can do this later from
-              your profile if you miss the call.
+            <p className="text-xs text-slate-500 mb-4">
+              You'll now receive SMS alerts whenever someone sends you a delivery.
             </p>
             <button
               type="button"
@@ -145,7 +143,7 @@ export default function Register() {
         <form onSubmit={handleRegister} className="space-y-5">
           {/* Row 1: Name */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Full Name</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Full Name <span className="text-red-500">*</span></label>
             <input
               type="text"
               name="name"
@@ -159,7 +157,7 @@ export default function Register() {
 
           {/* Row 2: Email */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Staff Email</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Staff Email <span className="text-red-500">*</span></label>
             <input
               type="email"
               name="email"
@@ -173,7 +171,7 @@ export default function Register() {
 
           {/* Row 2b: Mobile Number (for SMS delivery alerts) */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mobile Number</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mobile Number <span className="text-red-500">*</span></label>
             <div className="flex items-stretch gap-2">
               <div className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 whitespace-nowrap">
                 <span className="text-lg">🇱🇰</span> +94
@@ -188,6 +186,7 @@ export default function Register() {
                 }}
                 placeholder="77 XXXXXXX"
                 maxLength={9}
+                required
                 className="flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 text-sm transition tracking-widest"
               />
             </div>
@@ -195,7 +194,7 @@ export default function Register() {
 
           {/* Row 3: Department */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Department</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Department <span className="text-red-500">*</span></label>
             <select
               name="department"
               required
@@ -220,7 +219,7 @@ export default function Register() {
           {/* Row 4: RFID — Hexadecimal format */}
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              RFID Card Number
+              RFID Card Number <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -247,7 +246,7 @@ export default function Register() {
           {/* Row 5: Passwords */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Password</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Password <span className="text-red-500">*</span></label>
               <input
                 type="password"
                 name="password"
@@ -259,7 +258,7 @@ export default function Register() {
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Confirm Password</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Confirm Password <span className="text-red-500">*</span></label>
               <input
                 type="password"
                 name="confirmPassword"
