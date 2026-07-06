@@ -56,4 +56,64 @@ async function sendSms(to, body) {
   }
 }
 
-module.exports = { sendSms, smsConfigured: isConfigured };
+/**
+ * Check whether a phone number is already in the Twilio account's
+ * Verified Caller IDs list. Returns false on any error / not configured.
+ * @param {string} phone  E.164, e.g. "+9477XXXXXXX"
+ */
+async function isCallerIdVerified(phone) {
+  if (!client || !phone) return false;
+  try {
+    const list = await client.outgoingCallerIds.list({ phoneNumber: phone, limit: 1 });
+    return list.length > 0;
+  } catch (err) {
+    console.error(`[SMS] Could not check verified status for ${phone}:`, err.message);
+    return false;
+  }
+}
+
+/**
+ * Kick off Twilio Caller-ID verification for a number. Twilio places an
+ * automated CALL to the number; the owner must answer and key in the
+ * returned validationCode. (Twilio requires this human confirmation — a
+ * number cannot be silently added to the verified list on a trial account.)
+ *
+ * Never throws. Returns one of:
+ *   { started: true, validationCode: '123456' }   → tell the user to answer & enter it
+ *   { started: false, alreadyVerified: true }      → nothing to do
+ *   { started: false, reason: '...' }              → not configured / error
+ *
+ * @param {string} phone         E.164, e.g. "+9477XXXXXXX"
+ * @param {string} friendlyName  Label shown in the Twilio console (e.g. staff name)
+ */
+async function initiateCallerIdVerification(phone, friendlyName) {
+  if (!isConfigured) {
+    console.warn('[SMS] Twilio not configured — skipping caller-ID verification.');
+    return { started: false, reason: 'not_configured' };
+  }
+  if (!phone) return { started: false, reason: 'no_phone' };
+
+  try {
+    if (await isCallerIdVerified(phone)) {
+      console.log(`[SMS] ${phone} is already a verified caller ID.`);
+      return { started: false, alreadyVerified: true };
+    }
+
+    const vr = await client.validationRequests.create({
+      friendlyName: friendlyName || phone,
+      phoneNumber: phone,
+    });
+    console.log(`[SMS] Verification call placed to ${phone} (code: ${vr.validationCode}).`);
+    return { started: true, validationCode: vr.validationCode };
+  } catch (err) {
+    console.error(`[SMS] Failed to start verification for ${phone}:`, err.message);
+    return { started: false, reason: err.message };
+  }
+}
+
+module.exports = {
+  sendSms,
+  isCallerIdVerified,
+  initiateCallerIdVerification,
+  smsConfigured: isConfigured,
+};

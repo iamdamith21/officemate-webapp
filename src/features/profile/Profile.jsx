@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
-import { getInitials } from '../../utils/helpers';
+import { getInitials, isValidPhone } from '../../utils/helpers';
+import { DEPARTMENTS } from '../../constants';
 import API from '../../config/api';
 
 export default function Profile() {
@@ -20,10 +21,17 @@ export default function Profile() {
   });
   const [profileMsg, setProfileMsg] = useState('');
   const [profileError, setProfileError] = useState('');
+  const [verifyInfo, setVerifyInfo] = useState(null); // Twilio caller-ID verification prompt
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    setProfileMsg(''); setProfileError('');
+    setProfileMsg(''); setProfileError(''); setVerifyInfo(null);
+
+    // Validate phone format before hitting the server.
+    if (profileData.phone && !isValidPhone(profileData.phone)) {
+      return setProfileError('Enter a valid mobile number (9 digits after +94).');
+    }
+
     try {
       const res = await API.put('/employees/update-profile', {
         email: user.email,
@@ -33,9 +41,16 @@ export default function Profile() {
       });
       if (res.data.success) {
         setProfileMsg('Profile updated successfully!');
-        // Update local context
-        login(res.data.data.email, res.data.data.name, res.data.data.role, res.data.data._id, res.data.data.department, res.data.data.phone || '');
-        setTimeout(() => setIsEditingProfile(false), 1500);
+        // Update local context (keep name — the API response omits it)
+        login(res.data.data.email, user.name, res.data.data.role, res.data.data._id, res.data.data.department, res.data.data.phone || '');
+
+        // If the phone changed, Twilio is calling to verify it — show the code.
+        const sv = res.data.smsVerification;
+        if (sv?.started && sv?.validationCode) {
+          setVerifyInfo({ code: sv.validationCode, phone: res.data.data.phone });
+        } else {
+          setTimeout(() => setIsEditingProfile(false), 1500);
+        }
       }
     } catch (err) {
       setProfileError(err.response?.data?.message || 'Failed to update profile');
@@ -153,9 +168,10 @@ export default function Profile() {
                         className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         required
                       >
-                        <option value="Information Technology">Information Technology</option>
-                        <option value="Computational Technology">Computational Technology</option>
-                        <option value="Interdisciplinary Studies">Interdisciplinary Studies</option>
+                        <option value="">Select department</option>
+                        {DEPARTMENTS.map(dept => (
+                          <option key={dept} value={dept}>{dept}</option>
+                        ))}
                         <option value="Dean's Office">Dean's Office</option>
                       </select>
                     </div>
@@ -186,6 +202,23 @@ export default function Profile() {
                       <p className="mt-1 text-xs text-emerald-600 font-medium">✅ Will send as: {profileData.phone}</p>
                     )}
                   </div>
+
+                  {/* Twilio caller-ID verification prompt (shown after a phone change) */}
+                  {verifyInfo && (
+                    <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-xl">📞</span>
+                        <span className="font-extrabold text-sm">Verify your mobile for SMS alerts</span>
+                      </div>
+                      <p className="text-xs leading-relaxed mb-2">
+                        Twilio is calling <span className="font-bold">{verifyInfo.phone}</span>. Answer and enter this
+                        code on your keypad when prompted:
+                      </p>
+                      <div className="text-center bg-white border border-blue-200 rounded-xl py-2">
+                        <span className="text-2xl font-black tracking-[0.3em] text-blue-700">{verifyInfo.code}</span>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <button type="submit" className="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all text-xs uppercase tracking-widest shadow-md">
                       Save Changes

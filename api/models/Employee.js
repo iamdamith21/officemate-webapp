@@ -23,7 +23,12 @@ const EmployeeSchema = new mongoose.Schema({
     // Optional — if absent, the SMS step is skipped gracefully.
     type: String,
     default: '',
-    trim: true
+    trim: true,
+    validate: {
+      // Allow empty (optional field) or a valid E.164 number.
+      validator: (v) => v === '' || /^\+\d{9,15}$/.test(v),
+      message: 'Phone must be in E.164 format, e.g. +94771234567.'
+    }
   },
   department: {
     type: String,

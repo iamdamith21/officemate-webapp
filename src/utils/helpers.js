@@ -53,6 +53,29 @@ export const formatRfidInput = (raw) => {
 };
 
 /**
+ * Validates a phone number in E.164 format (e.g. "+94771234567").
+ * Twilio requires E.164, so this is the format we store and send.
+ */
+export const isValidPhone = (phone) => /^\+\d{9,15}$/.test(phone);
+
+/**
+ * Normalises loose Sri Lankan phone input into E.164 (+94XXXXXXXXX).
+ * Handles local "0" prefixes and "94" country codes:
+ *   "0771234567"    → "+94771234567"
+ *   "94771234567"   → "+94771234567"
+ *   "771234567"     → "+94771234567"
+ * Returns '' for empty input.
+ */
+export const normalizeSLPhone = (raw) => {
+  if (!raw) return '';
+  let digits = String(raw).replace(/[^0-9]/g, '');
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  if (digits.startsWith('94')) digits = digits.slice(2);
+  digits = digits.slice(0, 9);
+  return digits ? `+94${digits}` : '';
+};
+
+/**
  * Generates a random RFID hex tag like "A3 F1 9C 2D".
  */
 export const generateRandomRfidHex = () => {

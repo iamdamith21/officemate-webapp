@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Employee = require('../models/Employee');
+const { initiateCallerIdVerification } = require('../utils/sms');
 
 // ─────────────────────────────────────────────────────────────────
 // 1. Register a new Lecturer/Staff Member (POST /api/employees/register)
@@ -25,7 +26,22 @@ router.post('/register', async (req, res) => {
     });
 
     await newEmployee.save();
-    res.status(201).json({ success: true, message: 'Account registered successfully!', data: newEmployee });
+
+    // If the user supplied a phone number, automatically start Twilio
+    // caller-ID verification so their number can receive SMS delivery
+    // alerts. Twilio calls the number; the user enters the code we return.
+    // Non-blocking: registration succeeds regardless of the outcome.
+    let smsVerification = { started: false };
+    if (newEmployee.phone) {
+      smsVerification = await initiateCallerIdVerification(newEmployee.phone, newEmployee.name);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Account registered successfully!',
+      data: newEmployee,
+      smsVerification
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: 'Registration failed.', error: error.message });
   }
@@ -157,13 +173,26 @@ router.put('/update-profile', async (req, res) => {
 
     if (newEmail) employee.email = newEmail.toLowerCase();
     if (newDepartment) employee.department = newDepartment;
-    if (newPhone !== undefined) employee.phone = newPhone.trim();
+
+    // Detect a phone change so we can (re)start SMS verification for the new number.
+    let phoneChanged = false;
+    if (newPhone !== undefined && newPhone.trim() !== employee.phone) {
+      employee.phone = newPhone.trim();
+      phoneChanged = true;
+    }
 
     await employee.save();
+
+    // If the phone number was set/changed, auto-start Twilio caller-ID verification.
+    let smsVerification = { started: false };
+    if (phoneChanged && employee.phone) {
+      smsVerification = await initiateCallerIdVerification(employee.phone, employee.name);
+    }
 
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully.',
+      smsVerification,
       data: {
         _id: employee._id,
         name: employee.name,
