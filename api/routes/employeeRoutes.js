@@ -298,7 +298,7 @@ router.post('/forgot-password', async (req, res) => {
             `If you did not request this, please ignore this email and your password will remain unchanged.\n`
     });
 
-    res.status(200).json({ success: true, message: 'Password reset link has been sent to your real email inbox.' });
+    res.status(200).json({ success: true, message: 'Password reset instructions have been sent to your email.' });
   } catch (error) {
     console.error('Email error:', error);
     res.status(500).json({ success: false, error: 'Failed to send email. Please check server SMTP configuration.' });
@@ -311,13 +311,16 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, newPassword } = req.body;
-    const employee = await Employee.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
+    const employee = await Employee.findOne({ resetPasswordToken: token });
 
     if (!employee) {
-      return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' });
+      console.log(`[RESET PWD] Token not found: ${token}`);
+      return res.status(400).json({ success: false, message: 'Password reset token is invalid.' });
+    }
+
+    if (employee.resetPasswordExpires < Date.now()) {
+      console.log(`[RESET PWD] Token expired for user: ${employee.email}`);
+      return res.status(400).json({ success: false, message: 'Password reset token has expired. Please request a new one.' });
     }
 
     employee.password = newPassword;
