@@ -19,7 +19,19 @@ export default function ForgotPassword() {
     try {
       const response = await API.post('/employees/forgot-password', { email: email.trim().toLowerCase() });
       if (response.data.success) {
-        setMessage(response.data.message || 'Reset instructions sent to your email.');
+        if (response.data.resetUrl) {
+          setMessage(
+            <div className="flex flex-col gap-2">
+              <span className="font-bold text-emerald-900">Demo Mode Active: Email skipped.</span>
+              <span>Click the link below to reset your password directly:</span>
+              <a href={response.data.resetUrl} className="text-blue-700 underline font-bold break-all bg-white/50 p-2 rounded-lg mt-1 border border-emerald-200 shadow-sm hover:bg-white transition-colors">
+                {response.data.resetUrl}
+              </a>
+            </div>
+          );
+        } else {
+          setMessage(response.data.message || 'Reset instructions sent to your email.');
+        }
       }
     } catch (error) {
       setErrorMsg(error.response?.data?.message || 'Failed to send reset instructions. Please try again.');

@@ -268,7 +268,8 @@ router.post('/forgot-password', async (req, res) => {
       console.log(`========================================\n`);
       return res.status(200).json({
         success: true,
-        message: 'Email service is not configured. (Dev Mode: Check server console for reset link)'
+        message: 'Email service is not configured. (Dev Mode: Check server console for reset link)',
+        resetUrl: resetUrl
       });
     }
 
