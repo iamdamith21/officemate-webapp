@@ -17,7 +17,7 @@ wss.on('connection', function connection(ws) {
         subscribers[msg.topic].push(ws);
         console.log(`[Mock ROS] Client subscribed to ${msg.topic}`);
       }
-    } catch(e) {
+    } catch {
       // ignore parsing errors
     }
   });
@@ -69,7 +69,7 @@ setInterval(async () => {
         batteryLevel: currentBattery
       })
     });
-  } catch (err) {
+  } catch {
     // Silently fail if API is not running yet
   }
 }, 2000);

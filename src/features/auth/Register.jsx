@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthLayout from '../../layouts/AuthLayout';
 import API from '../../config/api';
@@ -118,17 +118,18 @@ export default function Register() {
         {verifyInfo && (
           <div className="mb-6 p-5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 shadow-sm">
             <div className="flex items-center space-x-3 mb-2">
-              <span className="text-2xl">📱</span>
-              <h3 className="font-extrabold text-base tracking-tight">You're verified on Twilio!</h3>
+              <span className="text-2xl">📞</span>
+              <h3 className="font-extrabold text-base tracking-tight">One last step — verify your mobile</h3>
             </div>
             <p className="text-sm leading-relaxed mb-3">
-              We've successfully registered <span className="font-bold">{verifyInfo.phone}</span>. You will get an update from Twilio saying you are verified.
+              Twilio is calling <span className="font-bold">{verifyInfo.phone}</span> now. Answer and enter this
+              code on your keypad to receive SMS delivery alerts:
             </p>
-            <div className="text-center bg-white border border-emerald-200 rounded-xl py-3 mb-3">
-              <span className="text-xl font-bold text-emerald-600">✅ Verified</span>
+            <div className="text-center bg-white border border-blue-200 rounded-xl py-3 mb-3">
+              <span className="text-3xl font-black tracking-[0.3em] text-blue-700">{verifyInfo.code}</span>
             </div>
             <p className="text-xs text-slate-500 mb-4">
-              You'll now receive SMS alerts whenever someone sends you a delivery.
+              You can skip this and still use OfficeMate — you just won't get SMS alerts until your number is verified.
             </p>
             <button
               type="button"

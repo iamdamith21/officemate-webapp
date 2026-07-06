@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import AuthLayout from '../../layouts/AuthLayout';
 import API from '../../config/api';

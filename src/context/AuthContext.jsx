@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import * as ROSLIB from 'roslib';
 import API from '../config/api';
 
@@ -190,6 +190,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!user) return;
 
+    // Initial load + 5s polling. The synchronous fetch on mount is intentional
+    // (we want data immediately, not one interval-tick later).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDeliveries();
     const deliveryPoll = setInterval(fetchDeliveries, 5000);
 
@@ -226,6 +229,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext);
 }

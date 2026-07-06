@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getInitials } from '../utils/helpers';
@@ -7,7 +7,7 @@ import ChatAgent from '../components/ChatAgent';
 export default function DashboardLayout({ children, isAdmin = false }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, notifications, activePopup, closePopup } = useAuth();
+  const { user, logout, notifications } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -34,24 +34,6 @@ export default function DashboardLayout({ children, isAdmin = false }) {
       {/* Background Ambience */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-100 rounded-full blur-[100px] pointer-events-none opacity-50"></div>
       <div className="absolute bottom-0 left-[250px] w-[500px] h-[500px] bg-slate-200 rounded-full blur-[100px] pointer-events-none opacity-50"></div>
-
-      {/* ================= LIVE POP-UP CARD FOR REAL-TIME SIMULATION ================= */}
-      {activePopup && (
-        <div className="absolute top-6 right-6 z-50 glass-card border-l-4 border-l-blue-600 shadow-xl rounded-2xl p-5 w-80 transition-all duration-300 animate-fade-in-down">
-          <div className="flex justify-between items-start mb-2">
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2 uppercase tracking-wider">
-              <span className="h-2 w-2 rounded-full bg-blue-600 animate-ping"></span>
-              {activePopup.title}
-            </h4>
-            <button onClick={closePopup} className="text-slate-400 hover:text-slate-600 transition font-bold text-sm ml-4">✕</button>
-          </div>
-          <p className="text-sm text-slate-600 leading-relaxed font-sans">{activePopup.message}</p>
-          <div className="flex justify-between items-center mt-4 pt-2.5 border-t border-slate-200/50">
-            <span className="text-xs text-slate-400">{activePopup.time}</span>
-            <span className="text-[10px] bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded uppercase tracking-wider">Live Status</span>
-          </div>
-        </div>
-      )}
 
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (

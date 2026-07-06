@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import API from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
@@ -37,7 +37,7 @@ export default function AdminDashboard() {
       await API.patch(`/deliveries/update-status/${req._id}`, { status: nextState });
       addNotification('Delivery Advanced', `Delivery #${req._id.slice(-6)} moved to: ${nextState}`);
       await fetchDeliveries();
-    } catch (error) {
+    } catch {
       alert('❌ Failed to update delivery status.');
     }
   };
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
   );
   const pendingRequests = deliveryRequests.filter(d => d.status === 'Requested');
   const handleRobotCommand = async (command) => {
-    let updatedFields = {};
+    let updatedFields;
     switch (command) {
       case 'PAUSE':
         updatedFields = { status: 'Idle' };
@@ -210,7 +210,6 @@ export default function AdminDashboard() {
                 {deliveryRequests.length > 0 ? (
                   deliveryRequests.map((req) => {
                     const isCompleted = req.status === 'Completed' || req.status === 'Cancelled';
-                    const isConfirmed = req.status === 'Confirmed';
                     const isInProgress = ['Heading to Sender', 'Heading to Recipient', 'Awaiting Pickup'].includes(req.status);
 
                     return (

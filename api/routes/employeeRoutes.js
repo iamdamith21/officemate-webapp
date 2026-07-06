@@ -288,7 +288,7 @@ router.post('/forgot-password', async (req, res) => {
 
 
 
-    let info = await transporter.sendMail({
+    await transporter.sendMail({
       from: '"OfficeMate Support" <support@officemate.uom.lk>',
       to: employee.email,
       subject: "OfficeMate Password Reset Request",

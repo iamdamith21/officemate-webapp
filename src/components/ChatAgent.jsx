@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useState, useRef, useEffect } from 'react';
 
 // ─── Knowledge Base ─────────────────────────────────────────────
 // Comprehensive topic-response map for the OfficeMate assistant.
@@ -134,7 +133,7 @@ const KNOWLEDGE_BASE = [
 /**
  * Finds the best matching response from the knowledge base.
  */
-function findResponse(input, isRosConnected) {
+function findResponse(input) {
   const lower = input.toLowerCase().trim();
   const inputWords = lower.split(/\W+/).filter(w => w.length > 2);
   
@@ -178,7 +177,6 @@ function findResponse(input, isRosConnected) {
 }
 
 export default function ChatAgent() {
-  const { isRosConnected } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { id: 1, text: "Hello! 👋 I'm your OfficeMate assistant. Ask me anything about deliveries, the robot, your account, or the system!", isUser: false }
@@ -206,7 +204,7 @@ export default function ChatAgent() {
 
     // Generate AI response
     setTimeout(() => {
-      const botText = findResponse(userMessage.text, isRosConnected);
+      const botText = findResponse(userMessage.text);
       setMessages((prev) => [...prev, { id: Date.now() + 1, text: botText, isUser: false }]);
     }, 800);
   };

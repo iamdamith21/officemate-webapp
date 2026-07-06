@@ -23,41 +23,52 @@ if (!MONGO_URI) {
   console.error('❌ MONGO_URI environment variable is missing in Vercel!');
 }
 
-app.use((req, res, next) => {
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected || mongoose.connection.readyState === 1) {
+    isConnected = true;
+    return;
+  }
+  try {
+    console.log('🍃 Connecting to MongoDB...');
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 15000,
+      socketTimeoutMS: 45000
+    });
+    isConnected = true;
+    console.log('🍃 MongoDB Database Connected Successfully!');
+    
+    // Seed Admin — use try/catch so a seeding failure never crashes the server
+    try {
+      const Employee = require('./models/Employee');
+      const adminExists = await Employee.findOne({ email: 'admin@uom.lk' });
+      if (!adminExists) {
+        await Employee.create({
+          name: 'System Admin',
+          email: 'admin@uom.lk',
+          department: "Dean's Office",
+          role: 'Admin',
+          password: 'fit@123',
+          rfidTag: 'AD 00 00 01'
+        });
+        console.log('🌱 Admin account seeded.');
+      }
+    } catch (seedErr) {
+      console.error('⚠️  Admin seeding skipped (non-fatal):', seedErr.message);
+    }
+  } catch (error) {
+    console.error('❌ Database Connection Error:', error);
+  }
+};
+
+app.use(async (req, res, next) => {
   if (!MONGO_URI) {
     return res.status(500).json({ success: false, error: 'Database configuration missing (MONGO_URI). Please add it to Vercel Environment Variables and redeploy.' });
   }
+  await connectDB();
   next();
 });
-
-if (MONGO_URI) {
-  mongoose.connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 15000,
-    socketTimeoutMS: 45000
-  })
-    .then(async () => {
-      console.log('🍃 MongoDB Database Connected Successfully!');
-      // Seed Admin — use try/catch so a seeding failure never crashes the server
-      try {
-        const Employee = require('./models/Employee');
-        const adminExists = await Employee.findOne({ email: 'admin@uom.lk' });
-        if (!adminExists) {
-          await Employee.create({
-            name: 'System Admin',
-            email: 'admin@uom.lk',
-            department: "Dean's Office",
-            role: 'Admin',
-            password: 'fit@123',
-            rfidTag: 'AD 00 00 01'  // valid hex format required by schema
-          });
-          console.log('🌱 Admin account seeded.');
-        }
-      } catch (seedErr) {
-        console.error('⚠️  Admin seeding skipped (non-fatal):', seedErr.message);
-      }
-    })
-    .catch((err) => console.error('❌ Database Connection Error:', err));
-}
 
 // API Routes Setup
 // Depending on Vercel's rewrite mechanism, req.url might have /api stripped.

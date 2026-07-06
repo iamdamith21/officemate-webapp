@@ -1,8 +1,6 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
-import API from '../../config/api';
 import useRobotStatus from '../../hooks/useRobotStatus';
 import { DELIVERY_STATES, ROOM_COORDS, BASE_COORDS } from '../../constants';
 import { getStateIndex } from '../../utils/helpers';
@@ -27,7 +25,6 @@ export default function UserDashboard() {
     pendingConfirmations,
     confirmDelivery,
     declineDelivery,
-    fetchDeliveries,
     isRosConnected
   } = useAuth();
 

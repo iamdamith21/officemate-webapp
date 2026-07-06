@@ -36,11 +36,19 @@ router.post('/request', async (req, res) => {
     await newRequest.save();
     const populated = await newRequest.populate('employeeId');
 
-    // Send email alert to recipient
+    // Send email alert to recipient.
+    // Skip cleanly if SMTP isn't configured — otherwise nodemailer attempts a
+    // real connection and can hang until the socket times out, delaying the
+    // response (the request itself must never wait on notifications).
     try {
-      let transporter = nodemailer.createTransport({
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS || process.env.SMTP_USER.includes('your-email')) {
+        console.warn('[EMAIL] SMTP not configured — skipping delivery email.');
+        throw new Error('smtp_not_configured');
+      }
+
+      const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: process.env.SMTP_PORT || 587,
+        port: Number(process.env.SMTP_PORT) || 587,
         secure: false,
         auth: {
           user: process.env.SMTP_USER,
