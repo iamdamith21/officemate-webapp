@@ -8,6 +8,7 @@ export default function Analytics() {
 
   useEffect(() => {
     fetchDeliveries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const totalRequests = deliveryRequests.length;

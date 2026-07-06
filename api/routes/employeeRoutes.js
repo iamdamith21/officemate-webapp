@@ -301,7 +301,10 @@ router.post('/forgot-password', async (req, res) => {
     res.status(200).json({ success: true, message: 'Password reset instructions have been sent to your email.' });
   } catch (error) {
     console.error('Email error:', error);
-    res.status(500).json({ success: false, error: 'Failed to send email. Please check server SMTP configuration.' });
+    res.status(500).json({ 
+      success: false, 
+      message: `Failed to send email. SMTP Error: ${error.message}` 
+    });
   }
 });
 

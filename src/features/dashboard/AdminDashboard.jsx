@@ -24,6 +24,7 @@ export default function AdminDashboard() {
     const radarInterval = setInterval(() => setRadarAngle(prev => (prev + 3) % 360), 30);
 
     return () => { clearInterval(dataInterval); clearInterval(radarInterval); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Advance state by one step via admin override
