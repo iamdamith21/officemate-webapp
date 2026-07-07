@@ -59,4 +59,16 @@ const EmployeeSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+// Never expose sensitive fields when a document is serialised to JSON
+// (res.json, populated sub-documents, etc.). Password comparison uses the
+// document field directly, so this transform doesn't affect auth logic.
+EmployeeSchema.set('toJSON', {
+  transform: (_doc, ret) => {
+    delete ret.password;
+    delete ret.resetPasswordToken;
+    delete ret.resetPasswordExpires;
+    return ret;
+  }
+});
+
 module.exports = mongoose.model('Employee', EmployeeSchema);

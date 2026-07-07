@@ -52,7 +52,8 @@ router.post('/request', async (req, res) => {
         secure: false,
         auth: {
           user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          // Gmail App Passwords are shown with spaces but must be sent without.
+          pass: (process.env.SMTP_PASS || '').replace(/\s+/g, ''),
         },
       });
 

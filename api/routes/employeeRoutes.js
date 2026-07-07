@@ -282,7 +282,9 @@ router.post('/forgot-password', async (req, res) => {
       secure: false, // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        // Gmail shows App Passwords as "xxxx xxxx xxxx xxxx" but they must be
+        // sent without spaces — strip whitespace so either form works.
+        pass: (process.env.SMTP_PASS || '').replace(/\s+/g, ''),
       },
     });
 
