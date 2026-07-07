@@ -291,7 +291,7 @@ router.post('/forgot-password', async (req, res) => {
 
 
     await transporter.sendMail({
-      from: '"OfficeMate Support" <support@officemate.uom.lk>',
+      from: process.env.SMTP_FROM || '"OfficeMate Support" <support@officemate.uom.lk>',
       to: employee.email,
       subject: "OfficeMate Password Reset Request",
       text: `You are receiving this because you (or someone else) requested a password reset.\n\n` +
