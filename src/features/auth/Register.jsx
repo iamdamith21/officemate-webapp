@@ -12,6 +12,7 @@ export default function Register() {
     email: '',
     phone: '',
     department: '',
+    position: '',
     rfid: '',
     password: '',
     confirmPassword: ''
@@ -62,6 +63,7 @@ export default function Register() {
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.trim(),
         department: formData.department,
+        position: formData.position || 'Lecturer',
         rfidTag: formData.rfid.toUpperCase(),
         password: formData.password,
         role: 'Lecturer'
@@ -193,28 +195,48 @@ export default function Register() {
             </div>
           </div>
 
-          {/* Row 3: Department */}
-          <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Department <span className="text-red-500">*</span></label>
-            <select
-              name="department"
-              required
-              value={formData.department}
-              onChange={handleChange}
-              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 text-sm cursor-pointer transition"
-            >
-              <option value="">Select your department</option>
-              {DEPARTMENTS.map(dept => (
-                <option 
-                  key={dept} 
-                  value={dept}
-                  disabled={dept !== 'Department of Information Technology'}
-                  className={dept !== 'Department of Information Technology' ? 'text-slate-400' : 'text-slate-800 font-medium'}
-                >
-                  {dept}
-                </option>
-              ))}
-            </select>
+          {/* Row 3: Department and Position */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Department <span className="text-red-500">*</span></label>
+              <select
+                name="department"
+                required
+                value={formData.department}
+                onChange={handleChange}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 text-sm cursor-pointer transition"
+              >
+                <option value="">Select your department</option>
+                {DEPARTMENTS.map(dept => (
+                  <option 
+                    key={dept} 
+                    value={dept}
+                    disabled={dept !== 'Department of Information Technology'}
+                    className={dept !== 'Department of Information Technology' ? 'text-slate-400' : 'text-slate-800 font-medium'}
+                  >
+                    {dept}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Position <span className="text-red-500">*</span></label>
+              <select
+                name="position"
+                required
+                value={formData.position}
+                onChange={handleChange}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 text-sm cursor-pointer transition"
+              >
+                <option value="">Select your position</option>
+                <option value="Lecturer">Lecturer</option>
+                <option value="Senior Lecturer">Senior Lecturer</option>
+                <option value="Probationary Lecturer">Probationary Lecturer</option>
+                <option value="Temporary Lecturer">Temporary Lecturer</option>
+                <option value="Instructor">Instructor</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
           </div>
 
           {/* Row 4: RFID — Hexadecimal format */}

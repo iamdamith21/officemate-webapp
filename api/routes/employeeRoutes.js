@@ -8,7 +8,7 @@ const { initiateCallerIdVerification } = require('../utils/sms');
 // ─────────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, phone, department, rfidTag, password, role } = req.body;
+    const { name, email, phone, department, position, rfidTag, password, role } = req.body;
 
     const existingEmployee = await Employee.findOne({ email: email.toLowerCase() });
     if (existingEmployee) {
@@ -20,6 +20,7 @@ router.post('/register', async (req, res) => {
       email: email.toLowerCase(),
       phone: phone || '',
       department,
+      position: position || 'Lecturer',
       rfidTag: rfidTag || Array.from({ length: 4 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(' '),
       password: password || 'password123',
       role: role || 'Lecturer'
@@ -156,7 +157,7 @@ router.post('/change-password', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 router.put('/update-profile', async (req, res) => {
   try {
-    const { email, newEmail, newDepartment, newPhone } = req.body;
+    const { email, newEmail, newDepartment, newPosition, newPhone } = req.body;
     
     // Check if new email is already taken by someone else
     if (newEmail && newEmail.toLowerCase() !== email.toLowerCase()) {
@@ -173,6 +174,7 @@ router.put('/update-profile', async (req, res) => {
 
     if (newEmail) employee.email = newEmail.toLowerCase();
     if (newDepartment) employee.department = newDepartment;
+    if (newPosition) employee.position = newPosition;
 
     // Detect a phone change so we can (re)start SMS verification for the new number.
     let phoneChanged = false;
@@ -199,6 +201,7 @@ router.put('/update-profile', async (req, res) => {
         email: employee.email,
         phone: employee.phone,
         department: employee.department,
+        position: employee.position,
         role: employee.role
       }
     });

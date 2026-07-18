@@ -7,8 +7,9 @@ import Login from './features/auth/Login';
 import ForgotPassword from './features/auth/ForgotPassword';
 import ResetPassword from './features/auth/ResetPassword';
 
-// ── Dashboard Feature ──
+// ── Dashboard Features ──
 import UserDashboard from './features/dashboard/UserDashboard';
+import ActivityHistory from './features/dashboard/ActivityHistory';
 import AdminDashboard from './features/dashboard/AdminDashboard';
 
 // ── Delivery Feature ──
@@ -36,6 +37,7 @@ export default function App() {
           
           {/* User Pages */}
           <Route path="/user/dashboard" element={<UserDashboard />} />
+          <Route path="/user/history" element={<ActivityHistory />} />
           <Route path="/user/create-delivery" element={<CreateDelivery />} />
           <Route path="/user/profile" element={<Profile />} />
           

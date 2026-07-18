@@ -267,13 +267,13 @@ export default function UserDashboard() {
                 <div>
                   <span className="text-xs text-slate-400 uppercase font-semibold tracking-widest block mb-1.5">Live Location</span>
                   <p className="font-bold text-white flex items-center text-sm">
-                    <span className="mr-2 text-lg">📍</span> {robotStatus.currentLocation || "Dean's Office"}
+                    <span className="mr-2 text-lg">📍</span> {robotStatus.currentLocation || "Docking Station"}
                   </p>
                 </div>
                 <div>
                   <span className="text-xs text-slate-400 uppercase font-semibold tracking-widest block mb-1.5">Base Station</span>
                   <p className="font-bold text-white flex items-center text-sm">
-                    <span className="mr-2 text-lg">🏠</span> Dean's Office
+                    <span className="mr-2 text-lg">🏠</span> Docking Station
                   </p>
                 </div>
                 <div>
@@ -376,11 +376,11 @@ export default function UserDashboard() {
                     <text x="50" y="65" fill="#64748b" fontSize="8" fontWeight="600" textAnchor="middle">Lab 202</text>
                   </g>
 
-                  {/* Dean's Office — Center (Base) */}
+                  {/* Docking Station — Center (Base) */}
                   <g transform="translate(195,135)">
                     <rect width="110" height="80" rx="12" fill="#eff6ff" stroke="#60a5fa" strokeWidth="2" />
-                    <text x="55" y="30" fill="#1d4ed8" fontSize="10" fontWeight="bold" textAnchor="middle">DEAN'S OFFICE</text>
-                    <text x="55" y="48" fill="#3b82f6" fontSize="8" fontWeight="700" textAnchor="middle">🏠 Base Station</text>
+                    <text x="55" y="30" fill="#1d4ed8" fontSize="10" fontWeight="bold" textAnchor="middle">BASE STATION</text>
+                    <text x="55" y="48" fill="#3b82f6" fontSize="8" fontWeight="700" textAnchor="middle">🏠 Docking Station</text>
                     <text x="55" y="63" fill="#64748b" fontSize="8" fontWeight="600" textAnchor="middle">Charging Dock</text>
                   </g>
 
@@ -454,10 +454,6 @@ export default function UserDashboard() {
                 <span className="text-2xl group-hover:scale-110 transition-transform">👤</span>
                 <span>My Profile</span>
               </button>
-            </div>
-
-            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-semibold text-slate-500 leading-relaxed text-center">
-              💡 The robot's home base is the <strong className="text-slate-700">Dean's Office</strong>. It returns there automatically after completing all deliveries.
             </div>
           </div>
 

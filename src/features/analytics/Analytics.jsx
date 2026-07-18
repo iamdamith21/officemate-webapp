@@ -14,7 +14,40 @@ export default function Analytics() {
   }, [timeRange]);
 
   const handleExport = () => {
-    alert(`Generating ${timeRange} report in ${exportFormat} format...\n(Export logic would run here)`);
+    if (deliveryRequests.length === 0) {
+      alert('No data to export.');
+      return;
+    }
+
+    if (exportFormat === 'CSV') {
+      const headers = ['Ref ID', 'Status', 'Sender', 'Recipient', 'Destination', 'Date'];
+      const csvContent = deliveryRequests.map(row => {
+        return [
+          row._id,
+          row.status,
+          row.employeeId?.name || 'Unknown',
+          row.recipientName || 'Unknown',
+          row.deliveryDestination || row.pickupLocation || 'N/A',
+          new Date(row.createdAt).toLocaleDateString()
+        ].join(',');
+      });
+      
+      const csvString = [headers.join(','), ...csvContent].join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `officemate_report_${timeRange.replace(' ', '_').toLowerCase()}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (exportFormat === 'PDF') {
+      // For PDF, we'll trigger the browser's native print-to-pdf functionality
+      // Typically, an app would open a dedicated print-view, but for simplicity,
+      // window.print() leverages the browser's built-in PDF generator.
+      window.print();
+    }
   };
 
   const totalRequests = deliveryRequests.length;

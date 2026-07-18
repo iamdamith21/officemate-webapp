@@ -40,6 +40,19 @@ const EmployeeSchema = new mongoose.Schema({
       'Dean\'s Office'
     ]
   },
+  position: {
+    type: String,
+    required: true,
+    enum: [
+      'Lecturer',
+      'Senior Lecturer',
+      'Probationary Lecturer',
+      'Temporary Lecturer',
+      'Instructor',
+      'Other'
+    ],
+    default: 'Lecturer'
+  },
   rfidTag: {
     type: String,
     required: true,
