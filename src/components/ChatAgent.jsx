@@ -194,11 +194,10 @@ export default function ChatAgent() {
     scrollToBottom();
   }, [messages, isOpen]);
 
-  const handleSend = (e) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
+  const sendMessage = (text) => {
+    if (!text.trim()) return;
 
-    const userMessage = { id: Date.now(), text: inputValue, isUser: true };
+    const userMessage = { id: Date.now(), text: text, isUser: true };
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
 
@@ -207,6 +206,11 @@ export default function ChatAgent() {
       const botText = findResponse(userMessage.text);
       setMessages((prev) => [...prev, { id: Date.now() + 1, text: botText, isUser: false }]);
     }, 800);
+  };
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    sendMessage(inputValue);
   };
 
   return (
@@ -249,6 +253,20 @@ export default function ChatAgent() {
                 </div>
               </div>
             ))}
+            
+            {messages.length === 1 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {['How to send a delivery?', 'Where is the robot?', 'Analytics Reports', 'My RFID details'].map((chip) => (
+                  <button 
+                    key={chip}
+                    onClick={() => sendMessage(chip)}
+                    className="text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-200/60 px-3 py-1.5 rounded-full hover:bg-blue-100 hover:scale-105 transition-all shadow-sm"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 

@@ -137,7 +137,6 @@ export default function AdminDashboard() {
               {[
                 { label: 'Navigation System', status: isRosConnected ? `🟢 ${rosData.navStatus}` : '🔴 Offline', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
                 { label: 'Obstacle Sensors', status: isRosConnected ? (rosData.obstacleDist < 50 ? `🟡 ${rosData.obstacleDist.toFixed(1)}cm` : '🟢 CLEAR') : '🔴 Disconnected', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
-                { label: 'Locker Status', status: isRosConnected ? (rosData.lockerStatus ? '🟡 UNLOCKED' : '🟢 SECURED') : '🔴 Offline', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
               ].map(item => (
                 <div key={item.label} className="flex justify-between items-center border-b border-slate-100 pb-2.5">
                   <span className="text-slate-500">{item.label}</span>
@@ -149,13 +148,21 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center pt-1">
                 <span className="text-slate-500">Battery Level</span>
                 <div className="flex items-center space-x-2">
-                  <div className="w-24 bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
-                    <div
-                      className={`h-full rounded-full ${(isRosConnected ? rosData.battery : robotStatus.batteryLevel) > 30 ? 'bg-emerald-500' : 'bg-red-500'}`}
-                      style={{ width: `${Math.round(isRosConnected ? rosData.battery : robotStatus.batteryLevel)}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-bold text-slate-700">{Math.round(isRosConnected ? rosData.battery : robotStatus.batteryLevel)}%</span>
+                  {isRosConnected ? (
+                    <>
+                      <div className="w-24 bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200 shadow-inner">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${rosData.battery > 30 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`}
+                          style={{ width: `${Math.round(rosData.battery)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-slate-700">{Math.round(rosData.battery)}%</span>
+                    </>
+                  ) : (
+                    <span className="text-[10px] border px-2.5 py-0.5 rounded font-bold uppercase bg-slate-100 text-slate-500 border-slate-200">
+                      Not Powered
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

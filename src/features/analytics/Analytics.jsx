@@ -1,15 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Analytics() {
   const { fetchDeliveries, deliveryRequests } = useAuth();
+  const [timeRange, setTimeRange] = useState('This Week');
+  const [exportFormat, setExportFormat] = useState('CSV');
 
   useEffect(() => {
     fetchDeliveries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [timeRange]);
+
+  const handleExport = () => {
+    alert(`Generating ${timeRange} report in ${exportFormat} format...\n(Export logic would run here)`);
+  };
 
   const totalRequests = deliveryRequests.length;
   const completedRequests = deliveryRequests.filter(d => d.status === 'Completed').length;
@@ -27,10 +33,44 @@ export default function Analytics() {
     <DashboardLayout isAdmin={true}>
       <div className="w-full space-y-8 text-slate-700 animate-fade-in-up">
         
-        {/* Header */}
-        <div className="pb-2 border-b border-slate-200/50">
-          <h1 className="text-4xl font-black text-slate-800 tracking-tight">Delivery Analytics</h1>
-          <p className="text-slate-500 text-xs mt-2 uppercase font-bold tracking-[0.15em]">Logistics data and system statistics</p>
+        {/* Header & Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-slate-200/50 gap-4">
+          <div>
+            <h1 className="text-4xl font-black text-slate-800 tracking-tight">Delivery Analytics</h1>
+            <p className="text-slate-500 text-xs mt-2 uppercase font-bold tracking-[0.15em]">Logistics data and system statistics</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <select 
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:border-blue-500 shadow-sm transition"
+            >
+              <option value="Today">Today</option>
+              <option value="This Week">This Week</option>
+              <option value="This Month">This Month</option>
+              <option value="All Time">All Time</option>
+            </select>
+            
+            <select 
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:border-blue-500 shadow-sm transition"
+            >
+              <option value="CSV">CSV</option>
+              <option value="PDF">PDF</option>
+            </select>
+
+            <button 
+              onClick={handleExport}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md shadow-blue-500/20 transition-all flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              Export
+            </button>
+          </div>
         </div>
 
         {/* Analytics Mini Summary Cards */}

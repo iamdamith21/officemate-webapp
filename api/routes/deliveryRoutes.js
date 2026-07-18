@@ -58,7 +58,7 @@ router.post('/request', async (req, res) => {
       });
 
       await transporter.sendMail({
-        from: '"OfficeMate Support" <support@officemate.uom.lk>',
+        from: process.env.SMTP_FROM || `"OfficeMate" <${process.env.SMTP_USER}>`,
         to: recipientEmail,
         subject: "New OfficeMate Delivery Request",
         text: `Hello ${recipientName},\n\nYou have a new delivery request from ${senderEmail} waiting for your confirmation.\n\nDescription: ${description}\nPickup: ${pickupLocation}\nDestination: ${deliveryDestination}\n\nPlease login to your OfficeMate Dashboard to accept or decline the request.\n\nThank you,\nOfficeMate Delivery System`

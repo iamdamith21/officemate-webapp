@@ -20,6 +20,7 @@ export default function DashboardLayout({ children, isAdmin = false }) {
     ? [
         { name: 'Admin Dashboard', path: '/admin/dashboard', icon: '🎛️' },
         { name: 'Reports & Analytics', path: '/admin/analytics', icon: '📈' },
+        { name: 'User Management', path: '/admin/users', icon: '👥' },
         { name: 'Profile', path: '/admin/profile', icon: '👤' },
       ]
     : [

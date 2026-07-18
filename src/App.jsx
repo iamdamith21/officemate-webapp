@@ -17,6 +17,9 @@ import CreateDelivery from './features/delivery/CreateDelivery';
 // ── Analytics Feature ──
 import Analytics from './features/analytics/Analytics';
 
+// ── Admin Features ──
+import UserManagement from './features/dashboard/UserManagement';
+
 // ── Profile Feature ──
 import Profile from './features/profile/Profile';
 
@@ -39,6 +42,7 @@ export default function App() {
           {/* Admin Pages */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/analytics" element={<Analytics />} />
+          <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/profile" element={<Profile />} />
         </Routes>
       </Router>

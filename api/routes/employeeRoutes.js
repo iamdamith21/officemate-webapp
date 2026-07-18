@@ -277,9 +277,9 @@ router.post('/forgot-password', async (req, res) => {
 
     // Use real SMTP credentials from .env
     let transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
       port: Number(process.env.SMTP_PORT) || 587,
-      secure: false, // true for 465, false for other ports
+      secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
         // Gmail shows App Passwords as "xxxx xxxx xxxx xxxx" but they must be
@@ -303,9 +303,13 @@ router.post('/forgot-password', async (req, res) => {
     res.status(200).json({ success: true, message: 'Password reset instructions have been sent to your email.' });
   } catch (error) {
     console.error('Email error:', error);
+    let errorMsg = error.message;
+    if (errorMsg.includes('535-5.7.8') || errorMsg.includes('BadCredentials')) {
+        errorMsg = 'Email sending failed due to invalid credentials. If using Gmail, you MUST use a 16-character App Password as your SMTP_PASS, not your regular password.';
+    }
     res.status(500).json({ 
       success: false, 
-      message: `Failed to send email. SMTP Error: ${error.message}` 
+      message: `Failed to send email. SMTP Error: ${errorMsg}` 
     });
   }
 });
@@ -334,6 +338,30 @@ router.post('/reset-password', async (req, res) => {
     await employee.save();
 
     res.status(200).json({ success: true, message: 'Your password has been successfully reset.' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+// 9. Delete Employee (DELETE /api/employees/:id)
+// ─────────────────────────────────────────────────────────────────
+router.delete('/:id', async (req, res) => {
+  try {
+    const employeeId = req.params.id;
+    const employee = await Employee.findById(employeeId);
+    
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Employee not found.' });
+    }
+
+    // Prevent deletion of the main admin to avoid locking out
+    if (employee.email === 'admin@uom.lk') {
+      return res.status(403).json({ success: false, message: 'Cannot delete the master admin account.' });
+    }
+
+    await Employee.findByIdAndDelete(employeeId);
+    res.status(200).json({ success: true, message: 'User removed successfully.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
