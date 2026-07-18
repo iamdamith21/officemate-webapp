@@ -426,32 +426,38 @@ export default function UserDashboard() {
           <div className="glass-card rounded-3xl p-6 shadow-sm flex flex-col justify-between">
             <div>
               <h3 className="text-lg font-bold text-slate-800 tracking-tight">Quick Actions</h3>
-              <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-widest">Hardware Controls</p>
+              <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-widest">Recommended Shortcuts</p>
             </div>
 
-            <div className="space-y-4 my-6">
+            <div className="grid grid-cols-2 gap-3 my-6">
               <button
                 onClick={() => navigate('/user/create-delivery')}
-                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-md active:scale-[0.98] text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                className="col-span-2 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-xl active:scale-[0.98] text-sm flex items-center justify-center gap-2"
               >
-                <span className="text-lg">📋</span> New Delivery Request
+                <span className="text-xl drop-shadow-md">🚀</span> New Delivery Request
               </button>
+              
               <button
-                onClick={() => alert('Locker cabinet secured.')}
-                className="w-full py-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm text-xs uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-2"
+                onClick={() => {
+                  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }}
+                className="py-3 px-2 bg-white/80 border border-slate-200/80 text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm text-[11px] uppercase tracking-wider active:scale-[0.98] flex flex-col items-center justify-center gap-1 group"
               >
-                <span className="text-lg">🔒</span> Lock My Locker
+                <span className="text-2xl group-hover:scale-110 transition-transform">📜</span>
+                <span>View History</span>
               </button>
+              
               <button
-                onClick={() => alert('Request sent. The robot will come to your location shortly.')}
-                className="w-full py-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm text-xs uppercase tracking-widest active:scale-[0.98] flex items-center justify-center gap-2"
+                onClick={() => navigate('/user/profile')}
+                className="py-3 px-2 bg-white/80 border border-slate-200/80 text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm text-[11px] uppercase tracking-wider active:scale-[0.98] flex flex-col items-center justify-center gap-1 group"
               >
-                <span className="text-lg">🤖</span> Call Robot Here
+                <span className="text-2xl group-hover:scale-110 transition-transform">👤</span>
+                <span>My Profile</span>
               </button>
             </div>
 
-            <div className="p-4 bg-blue-50/80 border border-blue-100 rounded-2xl text-xs font-medium text-slate-600 leading-relaxed text-center backdrop-blur-sm">
-              💡 The robot's home base is the <strong>Dean's Office</strong>. It returns there automatically after deliveries.
+            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-semibold text-slate-500 leading-relaxed text-center">
+              💡 The robot's home base is the <strong className="text-slate-700">Dean's Office</strong>. It returns there automatically after completing all deliveries.
             </div>
           </div>
 

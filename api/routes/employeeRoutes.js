@@ -304,12 +304,17 @@ router.post('/forgot-password', async (req, res) => {
   } catch (error) {
     console.error('Email error:', error);
     let errorMsg = error.message;
-    if (errorMsg.includes('535-5.7.8') || errorMsg.includes('BadCredentials')) {
-        errorMsg = 'Email sending failed due to invalid credentials. If using Gmail, you MUST use a 16-character App Password as your SMTP_PASS, not your regular password.';
+    if (errorMsg.includes('535-5.7.8') || errorMsg.includes('BadCredentials') || errorMsg.includes('Authentication failed')) {
+        errorMsg = 'Email sending failed due to invalid SMTP credentials in the server configuration. Please check the environment variables.';
     }
+    
+    // Provide the reset URL directly in the message as a fallback manual instruction
+    const fallbackMessage = `${errorMsg}\n\nMANUAL RESOLUTION: Please copy and paste the following link into your browser to reset your password:\n${resetUrl}`;
+
     res.status(500).json({ 
       success: false, 
-      message: `Failed to send email. SMTP Error: ${errorMsg}` 
+      message: fallbackMessage,
+      resetUrl: resetUrl // Also passing it explicitly for the frontend to consume if needed
     });
   }
 });
