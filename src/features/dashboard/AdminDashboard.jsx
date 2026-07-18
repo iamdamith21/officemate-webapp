@@ -7,7 +7,7 @@ import { DELIVERY_STATES } from '../../constants';
 import { getStatusColor } from '../../utils/helpers';
 
 export default function AdminDashboard() {
-  const { deliveryRequests, fetchDeliveries, addNotification, isRosConnected, rosData } = useAuth();
+  const { deliveryRequests, fetchDeliveries, addNotification, isRosConnected, isRobotOnline, rosData } = useAuth();
   const [loading, setLoading] = useState(true);
   const robotStatus = useRobotStatus();
   const [radarAngle, setRadarAngle] = useState(0);
@@ -86,10 +86,10 @@ export default function AdminDashboard() {
               OfficeMate Robot — Faculty of Information Technology, UoM
             </p>
           </div>
-          <div className={`flex items-center space-x-2 bg-white border px-4 py-2 rounded-2xl shadow-sm ${isRosConnected ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
-            <span className={`h-2.5 w-2.5 rounded-full ${isRosConnected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500 animate-pulse'}`} />
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${isRosConnected ? 'text-emerald-600' : 'text-red-600'}`}>
-              {isRosConnected ? 'System Online' : 'System Offline'}
+          <div className={`flex items-center space-x-2 bg-white border px-4 py-2 rounded-2xl shadow-sm ${isRobotOnline ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
+            <span className={`h-2.5 w-2.5 rounded-full ${isRobotOnline ? 'bg-emerald-500 animate-pulse' : 'bg-red-500 animate-pulse'}`} />
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${isRobotOnline ? 'text-emerald-600' : 'text-red-600'}`}>
+              {isRobotOnline ? 'Robot Online' : 'Robot Offline'}
             </span>
           </div>
         </div>
@@ -103,28 +103,48 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-bold text-slate-800 mt-1 mb-5">Manual Override</h3>
             <div className="grid grid-cols-2 gap-4">
               <button
+                disabled={!isRobotOnline}
                 onClick={() => handleRobotCommand('PAUSE')}
-                className="p-3.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2"
+                className={`p-3.5 border rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition ${
+                  isRobotOnline
+                    ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold active:scale-[0.98]'
+                    : 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed opacity-60'
+                }`}
               >
                 <span>⏸️</span> <span>Pause Robot</span>
               </button>
               <button
+                disabled={!isRobotOnline}
                 onClick={() => handleRobotCommand('RESUME')}
-                className="p-3.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2"
+                className={`p-3.5 border rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition ${
+                  isRobotOnline
+                    ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold active:scale-[0.98]'
+                    : 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed opacity-60'
+                }`}
               >
                 <span>▶️</span> <span>Resume</span>
               </button>
               <button
+                disabled={!isRobotOnline}
                 onClick={() => handleRobotCommand('EMERGENCY_STOP')}
-                className="p-4 bg-red-600 hover:bg-red-700 border border-red-700 text-white font-extrabold rounded-xl col-span-2 text-xs uppercase tracking-widest text-center shadow-md"
+                className={`p-4 border text-white font-extrabold rounded-xl col-span-2 text-xs uppercase tracking-widest text-center shadow-md transition ${
+                  isRobotOnline
+                    ? 'bg-red-600 hover:bg-red-700 border-red-700 active:scale-[0.98]'
+                    : 'bg-red-400 border-red-400 cursor-not-allowed opacity-60'
+                }`}
               >
                 🚨 EMERGENCY STOP
               </button>
               <button
+                disabled={!isRobotOnline}
                 onClick={() => handleRobotCommand('RETURN_TO_BASE')}
-                className="p-3 bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 col-span-2 text-xs uppercase tracking-wider text-center rounded-xl"
+                className={`p-3 border col-span-2 text-xs uppercase tracking-wider text-center rounded-xl transition ${
+                  isRobotOnline
+                    ? 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-[0.98]'
+                    : 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed opacity-60'
+                }`}
               >
-                🏠 Return to Dean's Office
+                🏠 Return to Base Station
               </button>
             </div>
           </div>
@@ -135,8 +155,8 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-bold text-slate-800 mt-1 mb-5">Status Check</h3>
             <div className="space-y-4 text-xs font-semibold">
               {[
-                { label: 'Navigation System', status: isRosConnected ? `🟢 ${rosData.navStatus}` : '🔴 Offline', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
-                { label: 'Obstacle Sensors', status: isRosConnected ? (rosData.obstacleDist < 50 ? `🟡 ${rosData.obstacleDist.toFixed(1)}cm` : '🟢 CLEAR') : '🔴 Disconnected', colorClass: isRosConnected ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
+                { label: 'Navigation System', status: isRobotOnline ? `🟢 ${rosData.navStatus}` : '🔴 Offline', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
+                { label: 'Obstacle Sensors', status: isRobotOnline ? (rosData.obstacleDist < 50 ? `🟡 ${rosData.obstacleDist.toFixed(1)}cm` : '🟢 CLEAR') : '🔴 Disconnected', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
               ].map(item => (
                 <div key={item.label} className="flex justify-between items-center border-b border-slate-100 pb-2.5">
                   <span className="text-slate-500">{item.label}</span>
@@ -148,7 +168,7 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center pt-1">
                 <span className="text-slate-500">Battery Level</span>
                 <div className="flex items-center space-x-2">
-                  {isRosConnected ? (
+                  {isRobotOnline ? (
                     <>
                       <div className="w-24 bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200 shadow-inner">
                         <div

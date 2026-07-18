@@ -16,6 +16,8 @@ export function AuthProvider({ children }) {
   const notifiedRequests = useRef(new Set());
 
   const [isRosConnected, setIsRosConnected] = useState(false);
+  const [isRobotOnline, setIsRobotOnline] = useState(false);
+  const lastRobotMsg = useRef(0);
   const [rosData, setRosData] = useState({
     battery: 100,
     navStatus: 'Idle',
@@ -43,7 +45,11 @@ export function AuthProvider({ children }) {
           name: '/battery_level',
           messageType: 'std_msgs/Float32'
         });
-        batteryTopic.subscribe(msg => setRosData(prev => ({ ...prev, battery: msg.data })));
+        batteryTopic.subscribe(msg => {
+          setRosData(prev => ({ ...prev, battery: msg.data }));
+          lastRobotMsg.current = Date.now();
+          setIsRobotOnline(true);
+        });
 
         // 2. Subscribe to Navigation Status
         const navTopic = new ROSLIB.Topic({
@@ -51,7 +57,11 @@ export function AuthProvider({ children }) {
           name: '/nav/status',
           messageType: 'std_msgs/String'
         });
-        navTopic.subscribe(msg => setRosData(prev => ({ ...prev, navStatus: msg.data })));
+        navTopic.subscribe(msg => {
+          setRosData(prev => ({ ...prev, navStatus: msg.data }));
+          lastRobotMsg.current = Date.now();
+          setIsRobotOnline(true);
+        });
 
         // 3. Subscribe to Obstacle Distance (Ultrasonic)
         const obstacleTopic = new ROSLIB.Topic({
@@ -59,7 +69,11 @@ export function AuthProvider({ children }) {
           name: '/ultrasonic/distance',
           messageType: 'std_msgs/Float32'
         });
-        obstacleTopic.subscribe(msg => setRosData(prev => ({ ...prev, obstacleDist: msg.data })));
+        obstacleTopic.subscribe(msg => {
+          setRosData(prev => ({ ...prev, obstacleDist: msg.data }));
+          lastRobotMsg.current = Date.now();
+          setIsRobotOnline(true);
+        });
 
         // 4. Subscribe to Locker Status
         const lockerTopic = new ROSLIB.Topic({
@@ -67,16 +81,22 @@ export function AuthProvider({ children }) {
           name: '/locker/status',
           messageType: 'std_msgs/Bool' // true: unlocked, false: locked
         });
-        lockerTopic.subscribe(msg => setRosData(prev => ({ ...prev, lockerStatus: msg.data })));
+        lockerTopic.subscribe(msg => {
+          setRosData(prev => ({ ...prev, lockerStatus: msg.data }));
+          lastRobotMsg.current = Date.now();
+          setIsRobotOnline(true);
+        });
       });
 
       ros.on('error', (error) => {
         setIsRosConnected(false);
+        setIsRobotOnline(false);
         console.log('Robot Connection connection error:', error);
       });
 
       ros.on('close', () => {
         setIsRosConnected(false);
+        setIsRobotOnline(false);
         console.log('Robot Connection connection closed. Retrying in 5 seconds...');
         reconnectTimeout = setTimeout(connectRos, 5000);
       });
@@ -84,9 +104,17 @@ export function AuthProvider({ children }) {
 
     connectRos();
 
+    const checkRobotOnline = setInterval(() => {
+      // If we haven't heard from the robot in 6 seconds, consider it offline/not powered
+      if (Date.now() - lastRobotMsg.current > 6000) {
+        setIsRobotOnline(false);
+      }
+    }, 2000);
+
     return () => {
       if (ros) ros.close();
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      clearInterval(checkRobotOnline);
     };
   }, []);
 
@@ -222,6 +250,7 @@ export function AuthProvider({ children }) {
       confirmDelivery,
       declineDelivery,
       isRosConnected,
+      isRobotOnline,
       rosData
     }}>
       {children}

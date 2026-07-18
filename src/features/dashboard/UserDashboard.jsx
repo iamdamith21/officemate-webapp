@@ -25,7 +25,7 @@ export default function UserDashboard() {
     pendingConfirmations,
     confirmDelivery,
     declineDelivery,
-    isRosConnected
+    isRobotOnline
   } = useAuth();
 
   const robotStatus = useRobotStatus();
@@ -149,21 +149,21 @@ export default function UserDashboard() {
               {user?.department || 'Faculty of Information Technology'} — OfficeMate Robot
             </p>
           </div>
-          <div className={`flex items-center space-x-3 bg-white/60 backdrop-blur-md border px-5 py-2.5 rounded-2xl shadow-sm ${isRosConnected ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
-            <span className={`h-2.5 w-2.5 rounded-full shadow-sm ${isRosConnected ? 'bg-emerald-500 animate-ping shadow-emerald-500' : 'bg-red-500 shadow-red-500'}`} />
-            <span className={`text-xs font-bold uppercase tracking-wider ${isRosConnected ? 'text-emerald-600' : 'text-red-600'}`}>
-              {isRosConnected ? 'Robot Sync Active' : 'Robot Offline'}
+          <div className={`flex items-center space-x-3 bg-white/60 backdrop-blur-md border px-5 py-2.5 rounded-2xl shadow-sm ${isRobotOnline ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
+            <span className={`h-2.5 w-2.5 rounded-full shadow-sm ${isRobotOnline ? 'bg-emerald-500 animate-ping shadow-emerald-500' : 'bg-red-500 shadow-red-500'}`} />
+            <span className={`text-xs font-bold uppercase tracking-wider ${isRobotOnline ? 'text-emerald-600' : 'text-red-600'}`}>
+              {isRobotOnline ? 'Robot Sync Active' : 'Robot Offline'}
             </span>
           </div>
         </div>
 
         {/* ── DELIVERY STATE MACHINE TRACKER ───────────────────── */}
         <div className="relative z-10">
-          {!isRosConnected && (
+          {!isRobotOnline && (
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 backdrop-blur-md rounded-3xl border border-red-100 shadow-inner">
               <span className="text-5xl mb-4 animate-bounce">⚠️</span>
-              <h4 className="font-bold text-red-600 text-xl tracking-tight">Robot Connection Offline</h4>
-              <p className="text-sm text-slate-600 font-medium mt-1">Robot tracking is disabled until hardware connection is restored.</p>
+              <h4 className="font-bold text-red-600 text-xl tracking-tight">Robot Offline / Not Powered</h4>
+              <p className="text-sm text-slate-600 font-medium mt-1">Robot tracking is disabled until the robot is powered on and connected.</p>
             </div>
           )}
           {activeDelivery ? (
@@ -278,9 +278,9 @@ export default function UserDashboard() {
                 </div>
                 <div>
                   <span className="text-xs text-slate-400 uppercase font-semibold tracking-widest block mb-1.5">Hardware Sync</span>
-                  <p className={`font-bold flex items-center text-sm ${isRosConnected ? 'text-emerald-400' : 'text-red-400'}`}>
-                    <span className="mr-2 text-lg">{isRosConnected ? '🟢' : '🔴'}</span> 
-                    {isRosConnected ? 'Robot Linked' : 'Robot Offline'}
+                  <p className={`font-bold flex items-center text-sm ${isRobotOnline ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <span className="mr-2 text-lg">{isRobotOnline ? '🟢' : '🔴'}</span> 
+                    {isRobotOnline ? 'Robot Linked' : 'Robot Offline'}
                   </p>
                 </div>
               </div>
@@ -323,10 +323,10 @@ export default function UserDashboard() {
 
           {/* SVG Map */}
           <div className="lg:col-span-2 relative">
-            {!isRosConnected && (
+            {!isRobotOnline && (
               <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md rounded-3xl border border-red-100 shadow-inner">
                 <span className="text-4xl mb-3 opacity-80 animate-pulse">📡</span>
-                <h4 className="font-bold text-red-600 text-lg tracking-tight">Map Offline</h4>
+                <h4 className="font-bold text-red-600 text-lg tracking-tight">Robot Offline / Not Powered</h4>
               </div>
             )}
             <div className="glass-card rounded-3xl p-6 shadow-sm h-full flex flex-col">

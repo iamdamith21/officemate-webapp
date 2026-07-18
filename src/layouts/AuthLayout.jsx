@@ -4,7 +4,7 @@ import { APP_VERSION } from '../constants';
 
 export default function AuthLayout({ children }) {
   const location = useLocation();
-  const { isRosConnected } = useAuth();
+  const { isRobotOnline } = useAuth();
   const isRegister = location.pathname.includes('register');
   const isForgot = location.pathname.includes('forgot-password');
 
@@ -62,8 +62,8 @@ export default function AuthLayout({ children }) {
           ) : (
             <>
               <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white text-sm font-semibold shadow-inner">
-                <span className={`h-2 w-2 rounded-full ${isRosConnected ? 'bg-emerald-400 animate-ping' : 'bg-red-500 animate-pulse'}`}></span>
-                <span>{isRosConnected ? 'System Online' : 'System Offline'}</span>
+                <span className={`h-2 w-2 rounded-full ${isRobotOnline ? 'bg-emerald-400 animate-ping' : 'bg-red-500 animate-pulse'}`}></span>
+                <span>{isRobotOnline ? 'System Online' : 'System Offline'}</span>
               </div>
               <h1 className="text-5xl font-bold leading-tight tracking-tight text-white">
                 Seamless <br />Office <br />Deliveries.
