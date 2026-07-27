@@ -5,12 +5,12 @@ import { useAuth } from '../../context/AuthContext';
 import useRobotStatus from '../../hooks/useRobotStatus';
 import { DELIVERY_STATES } from '../../constants';
 import { getStatusColor } from '../../utils/helpers';
+import RobotLiveView from './RobotLiveView';
 
 export default function AdminDashboard() {
-  const { deliveryRequests, fetchDeliveries, addNotification, isRosConnected, isRobotOnline, rosData, batteryValid } = useAuth();
+  const { deliveryRequests, fetchDeliveries, addNotification, isRobotOnline, rosData, batteryValid } = useAuth();
   const [loading, setLoading] = useState(true);
   const robotStatus = useRobotStatus();
-  const [radarAngle, setRadarAngle] = useState(0);
 
   useEffect(() => {
     const init = async () => {
@@ -21,9 +21,8 @@ export default function AdminDashboard() {
     init();
 
     const dataInterval = setInterval(fetchDeliveries, 5000);
-    const radarInterval = setInterval(() => setRadarAngle(prev => (prev + 3) % 360), 30);
 
-    return () => { clearInterval(dataInterval); clearInterval(radarInterval); };
+    return () => { clearInterval(dataInterval); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -284,48 +283,12 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* ── SECTION 4: LIVE RADAR MAP ────────────────────────── */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-md">
-          <h3 className="text-lg font-bold text-slate-800">Faculty Radar Map</h3>
-          <p className="text-xs text-slate-400 mt-0.5">Live scan overlay showing robot surroundings and obstacle detection</p>
-
-          <div className="bg-slate-50 rounded-2xl h-96 flex flex-col items-center justify-center border border-slate-200 shadow-inner relative overflow-hidden mt-6">
-            <div className="w-[300px] h-[300px] rounded-full border border-slate-200 relative flex items-center justify-center">
-              <div className="w-[200px] h-[200px] rounded-full border border-slate-200/60 flex items-center justify-center">
-                <div className="w-[100px] h-[100px] rounded-full border border-slate-200/40" />
-              </div>
-
-              {/* Radar sweep */}
-              <div
-                className="absolute inset-0 rounded-full pointer-events-none"
-                style={{
-                  transform: `rotate(${radarAngle}deg)`,
-                  background: 'conic-gradient(from 0deg at 50% 50%, rgba(59, 130, 246, 0.08) 0deg, transparent 90deg, transparent 360deg)'
-                }}
-              />
-
-              {/* Obstacle dots */}
-              <div className="absolute top-[80px] left-[75px] w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-              <div className="absolute top-[80px] left-[75px] w-2 h-2 rounded-full bg-emerald-400" />
-              <div className="absolute bottom-[90px] right-[80px] w-2 h-2 rounded-full bg-emerald-400 opacity-60" />
-              <div className="absolute top-[160px] right-[50px] w-2 h-2 rounded-full bg-emerald-400 opacity-40" />
-
-              {/* Center robot dot */}
-              <div className="absolute w-4 h-4 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center shadow-md">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              </div>
-            </div>
-
-            <div className="text-center p-5 z-10 space-y-1 mt-4">
-              <span className="text-slate-700 font-bold text-xs tracking-wider block">
-                🏠 Base: Dean's Office · Robot: {robotStatus.currentLocation}
-              </span>
-              <span className="text-slate-400 text-[10px] block">
-                Scan range: 12 metres &bull; Obstacle avoidance active
-              </span>
-            </div>
-          </div>
-        </div>
+        {/* ── SECTION 4: LIVE ROBOT VIEW ───────────────────────
+            Was a decorative "Faculty Radar Map": the obstacle dots were fixed
+            CSS positions and the sweep a CSS gradient — none of it came from
+            the robot. Replaced with a real render of the SLAM map, live LiDAR
+            returns, the localised pose and the planned route. */}
+        <RobotLiveView />
 
       </div>
     </DashboardLayout>

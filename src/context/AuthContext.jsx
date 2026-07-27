@@ -4,6 +4,10 @@ import API from '../config/api';
 
 const AuthContext = createContext();
 
+// Resolved at build time by Vite, so this is a module constant rather than
+// per-render state — which also keeps it out of the ROS effect's dependencies.
+const ROS_BRIDGE_URL = import.meta.env.VITE_ROS_BRIDGE_URL || 'ws://localhost:9090';
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('officeMate_user');
@@ -17,6 +21,11 @@ export function AuthProvider({ children }) {
 
   const [isRosConnected, setIsRosConnected] = useState(false);
   const [isRobotOnline, setIsRobotOnline] = useState(false);
+  // The live ROSLIB.Ros handle, exposed so components can subscribe to topics
+  // beyond the four telemetry ones below (e.g. RobotLiveView needs /map,
+  // /scan, /amcl_pose). Held in state, not a ref, so consumers re-subscribe
+  // when the socket is replaced on reconnect.
+  const [rosConn, setRosConn] = useState(null);
   const lastRobotMsg = useRef(0);
   const [rosData, setRosData] = useState({
     battery: null,     // null until a real reading arrives — see batteryValid
@@ -39,13 +48,12 @@ export function AuthProvider({ children }) {
       //   VITE_ROS_BRIDGE_URL=ws://192.168.1.23:9090
       // The localhost default is only useful with scripts/mock_ros.cjs, or
       // when the browser is running on the Pi itself. See .env.example.
-      ros = new ROSLIB.Ros({
-        url: import.meta.env.VITE_ROS_BRIDGE_URL || 'ws://localhost:9090'
-      });
+      ros = new ROSLIB.Ros({ url: ROS_BRIDGE_URL });
 
       ros.on('connection', () => {
         setIsRosConnected(true);
-        console.log('Robot Connection established successfully.');
+        setRosConn(ros);
+        console.log(`Robot Connection established successfully (${ROS_BRIDGE_URL}).`);
 
         // The four topics below are NOT published by the robot directly — they
         // are produced by the `api_adapter` node in the robot's `web_bridge`
@@ -113,12 +121,14 @@ export function AuthProvider({ children }) {
       ros.on('error', (error) => {
         setIsRosConnected(false);
         setIsRobotOnline(false);
+        setRosConn(null);
         console.log('Robot Connection connection error:', error);
       });
 
       ros.on('close', () => {
         setIsRosConnected(false);
         setIsRobotOnline(false);
+        setRosConn(null);
         console.log('Robot Connection connection closed. Retrying in 5 seconds...');
         reconnectTimeout = setTimeout(connectRos, 5000);
       });
@@ -274,7 +284,9 @@ export function AuthProvider({ children }) {
       isRosConnected,
       isRobotOnline,
       rosData,
-      batteryValid
+      batteryValid,
+      rosConn,
+      rosBridgeUrl: ROS_BRIDGE_URL
     }}>
       {children}
     </AuthContext.Provider>
