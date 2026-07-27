@@ -19,11 +19,15 @@ export function AuthProvider({ children }) {
   const [isRobotOnline, setIsRobotOnline] = useState(false);
   const lastRobotMsg = useRef(0);
   const [rosData, setRosData] = useState({
-    battery: 100,
+    battery: null,     // null until a real reading arrives — see batteryValid
     navStatus: 'Idle',
     obstacleDist: 999, // default safe distance
     lockerStatus: false // false = locked, true = unlocked
   });
+  // The robot only publishes /battery_level when a power monitor is actually
+  // fitted. Showing a default of 100% in the meantime is worse than showing
+  // nothing: it is a confident, wrong number about a safety-relevant value.
+  const batteryValid = rosData.battery !== null;
 
   useEffect(() => {
     let ros;
@@ -31,6 +35,10 @@ export function AuthProvider({ children }) {
 
     const connectRos = () => {
       console.log('Attempting to connect to Robot Connection...');
+      // Point this at the robot with VITE_ROS_BRIDGE_URL in .env, e.g.
+      //   VITE_ROS_BRIDGE_URL=ws://192.168.1.23:9090
+      // The localhost default is only useful with scripts/mock_ros.cjs, or
+      // when the browser is running on the Pi itself. See .env.example.
       ros = new ROSLIB.Ros({
         url: import.meta.env.VITE_ROS_BRIDGE_URL || 'ws://localhost:9090'
       });
@@ -38,6 +46,20 @@ export function AuthProvider({ children }) {
       ros.on('connection', () => {
         setIsRosConnected(true);
         console.log('Robot Connection established successfully.');
+
+        // The four topics below are NOT published by the robot directly — they
+        // are produced by the `api_adapter` node in the robot's `web_bridge`
+        // package, which translates the robot's native topics into this
+        // simpler, browser-friendly contract:
+        //
+        //   /battery_level       Float32  percent 0..100  <- /battery/state
+        //   /nav/status          String   display text    <- /mission_state
+        //   /ultrasonic/distance Float32  CENTIMETRES     <- /ultrasonic/range
+        //   /locker/status       Bool     true = unlocked <- /doors/state
+        //
+        // scripts/mock_ros.cjs fakes exactly the same four, so the mock and
+        // the real robot are interchangeable. If you change a name or a unit
+        // here, change it in BOTH api_adapter.py and mock_ros.cjs.
 
         // 1. Subscribe to Battery
         const batteryTopic = new ROSLIB.Topic({
@@ -251,7 +273,8 @@ export function AuthProvider({ children }) {
       declineDelivery,
       isRosConnected,
       isRobotOnline,
-      rosData
+      rosData,
+      batteryValid
     }}>
       {children}
     </AuthContext.Provider>

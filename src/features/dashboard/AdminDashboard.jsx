@@ -7,7 +7,7 @@ import { DELIVERY_STATES } from '../../constants';
 import { getStatusColor } from '../../utils/helpers';
 
 export default function AdminDashboard() {
-  const { deliveryRequests, fetchDeliveries, addNotification, isRosConnected, isRobotOnline, rosData } = useAuth();
+  const { deliveryRequests, fetchDeliveries, addNotification, isRosConnected, isRobotOnline, rosData, batteryValid } = useAuth();
   const [loading, setLoading] = useState(true);
   const robotStatus = useRobotStatus();
   const [radarAngle, setRadarAngle] = useState(0);
@@ -168,7 +168,7 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center pt-1">
                 <span className="text-slate-500">Battery Level</span>
                 <div className="flex items-center space-x-2">
-                  {isRobotOnline ? (
+                  {isRobotOnline && batteryValid ? (
                     <>
                       <div className="w-24 bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200 shadow-inner">
                         <div
@@ -179,8 +179,11 @@ export default function AdminDashboard() {
                       <span className="text-xs font-bold text-slate-700">{Math.round(rosData.battery)}%</span>
                     </>
                   ) : (
+                    // No power monitor is fitted on the robot yet, so it never
+                    // publishes /battery_level. Say so rather than showing a
+                    // made-up percentage.
                     <span className="text-[10px] border px-2.5 py-0.5 rounded font-bold uppercase bg-slate-100 text-slate-500 border-slate-200">
-                      Not Powered
+                      {isRobotOnline ? 'No Sensor' : 'Not Powered'}
                     </span>
                   )}
                 </div>

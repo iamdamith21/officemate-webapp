@@ -62,6 +62,49 @@ This starts:
 2. **Backend API server**: http://localhost:5000
 3. **Mock ROSBridge WebSocket server**: ws://localhost:9090 (for local testing of robot operations)
 
+### Connecting to the real robot
+
+The mock server exists so the UI can be developed without hardware. To talk to
+the actual OfficeMate robot instead:
+
+1. On the Raspberry Pi, start rosbridge and the topic adapter:
+
+   ```bash
+   ros2 launch web_bridge web_bridge.launch.py
+   ```
+
+   (One-off install: `sudo apt install ros-humble-rosbridge-suite`.)
+
+2. Copy `.env.example` to `.env` and point it at the Pi:
+
+   ```bash
+   VITE_ROS_BRIDGE_URL=ws://192.168.1.23:9090
+   ```
+
+3. Run `npm run dev:frontend` (or `npm run dev` — the mock will just sit idle
+   on port 9090 and be ignored).
+
+#### Topic contract
+
+The browser never sees the robot's native topics. The `api_adapter` node in the
+robot's `web_bridge` package translates them into this small, stable contract,
+and `scripts/mock_ros.cjs` fakes the identical four so the mock and the real
+robot are interchangeable:
+
+| Web app topic          | Type              | Units          | Robot source                          |
+| ---------------------- | ----------------- | -------------- | ------------------------------------- |
+| `/battery_level`       | `std_msgs/Float32`| percent 0–100  | `/battery/state` (`BatteryState`)     |
+| `/nav/status`          | `std_msgs/String` | display text   | `/mission_state` (`MissionState`)     |
+| `/ultrasonic/distance` | `std_msgs/Float32`| **centimetres**| `/ultrasonic/range` (`Range`, metres) |
+| `/locker/status`       | `std_msgs/Bool`   | true = unlocked| `/doors/state` (`String`)             |
+
+If you change a topic name or unit, change it in **all three** places:
+`AuthContext.jsx`, `api_adapter.py`, and `mock_ros.cjs`.
+
+> **Battery:** no power monitor (INA219) is currently fitted to the robot, so
+> `/battery_level` is never published and the dashboard shows *No Sensor*. This
+> is deliberate — the UI does not invent a percentage.
+
 ### Building for Production
 
 To build the optimized frontend production assets into the `dist/` directory:
