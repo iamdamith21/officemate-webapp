@@ -32,21 +32,21 @@ export default function NavigatePanel() {
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             Manual Navigation
           </span>
-          <h3 className="text-lg font-bold text-slate-800 mt-1">Send Robot To</h3>
+          <h3 className="text-lg font-bold text-slate-800 mt-0.5">Send Robot To Location</h3>
         </div>
         <span
-          className={`rounded-2xl border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+          className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
             isRosConnected
               ? 'border-emerald-200/60 bg-emerald-50 text-emerald-600'
-              : 'border-slate-200 bg-slate-50 text-slate-400'
+              : 'border-amber-200 bg-amber-50 text-amber-700'
           }`}
         >
-          {isRosConnected ? 'Connected' : 'Offline'}
+          {isRosConnected ? '🟢 Connected' : '📡 Standby'}
         </span>
       </div>
 
-      <p className="mt-1 mb-5 text-xs text-slate-500">
-        Point-to-point navigation only — no file pickup, RFID or doors.
+      <p className="mt-1 mb-5 text-xs text-slate-500 font-medium">
+        Point-to-point test navigation — target autonomous coordinates for surveyed faculty locations.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

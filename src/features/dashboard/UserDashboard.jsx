@@ -158,69 +158,98 @@ export default function UserDashboard() {
         </div>
 
         {/* ── DELIVERY STATE MACHINE TRACKER ───────────────────── */}
-        <div className="relative z-10">
+        <div className="relative z-10 space-y-4">
           {!isRobotOnline && (
-            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 backdrop-blur-md rounded-3xl border border-red-100 shadow-inner">
-              <span className="text-5xl mb-4 animate-bounce">⚠️</span>
-              <h4 className="font-bold text-red-600 text-xl tracking-tight">Robot Offline / Not Powered</h4>
-              <p className="text-sm text-slate-600 font-medium mt-1">Robot tracking is disabled until the robot is powered on and connected.</p>
+            <div className="bg-slate-900/90 text-white border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all">
+              <div className="flex items-center space-x-3.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 text-xl">
+                  📡
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-sm text-slate-100 tracking-wide">Robot Hardware Standby Mode</h4>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      Standby
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5 font-medium leading-relaxed">
+                    Hardware telemetry link is currently disconnected. Web order placement and request processing remain 100% active.
+                  </p>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider block">Bridge Endpoint</span>
+                <code className="text-xs text-amber-300 font-mono bg-slate-800/80 px-2 py-1 rounded border border-slate-700 block mt-0.5">
+                  ws://localhost:9090
+                </code>
+              </div>
             </div>
           )}
+
           {activeDelivery ? (
-            <div className="glass-card rounded-3xl p-8 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+            <div className="glass-card rounded-3xl p-5 sm:p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-3 sm:gap-4">
                 <div>
-                  <h3 className="text-xl font-bold text-slate-800 tracking-tight">Active Delivery Tracker</h3>
-                  <p className="text-sm text-slate-500 mt-1 font-medium">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">Active Delivery Tracker</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
                     ID #{activeDelivery._id?.slice(-6).toUpperCase()} · <span className="font-bold">{activeDelivery.description || 'Documents'}</span>
                   </p>
                 </div>
-                <span className="text-xs bg-blue-50 text-blue-600 border border-blue-200 px-4 py-2 rounded-full font-bold uppercase tracking-widest animate-pulse shadow-sm">
-                  In Progress
-                </span>
+                <div className="flex items-center gap-2">
+                  {!isRobotOnline && (
+                    <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-full font-bold uppercase tracking-wider">
+                      Offline Sync
+                    </span>
+                  )}
+                  <span className="text-xs bg-blue-50 text-blue-600 border border-blue-200 px-4 py-2 rounded-full font-bold uppercase tracking-widest animate-pulse shadow-sm">
+                    In Progress
+                  </span>
+                </div>
               </div>
 
-              {/* 6-step horizontal pipeline */}
-              <div className="flex items-center justify-between relative px-2 sm:px-6">
-                <div className="absolute top-5 left-8 right-8 h-1 bg-slate-100/80 z-0 rounded-full" />
-                {DELIVERY_STATES.map((state, index) => {
-                  const isPassed = index < activeStateIndex;
-                  const isActive = index === activeStateIndex;
-                  return (
-                    <div key={state.key} className="flex flex-col items-center z-10 relative flex-1">
-                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-base border-2 transition-all duration-300 ${
-                        isActive ? 'bg-blue-600 border-transparent text-white shadow-lg shadow-blue-500/40 scale-125' :
-                        isPassed ? 'bg-emerald-50 border-emerald-400 text-emerald-600 shadow-sm' :
-                        'bg-white/80 border-slate-200 text-slate-400 backdrop-blur-sm'
-                      }`}>
-                        {isPassed ? '✓' : state.icon}
+              {/* 5-step horizontal pipeline — mobile touch responsive */}
+              <div className="overflow-x-auto pb-4 pt-2 -mx-2 px-2 sm:overflow-visible sm:pb-0 sm:pt-0">
+                <div className="flex items-center justify-between relative min-w-[500px] sm:min-w-0 px-2 sm:px-6">
+                  <div className="absolute top-5 left-8 right-8 h-1 bg-slate-100/80 z-0 rounded-full" />
+                  {DELIVERY_STATES.map((state, index) => {
+                    const isPassed = index < activeStateIndex;
+                    const isActive = index === activeStateIndex;
+                    return (
+                      <div key={state.key} className="flex flex-col items-center z-10 relative flex-1">
+                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center text-sm sm:text-base border-2 transition-all duration-300 ${
+                          isActive ? 'bg-blue-600 border-transparent text-white shadow-lg shadow-blue-500/40 scale-110 sm:scale-125' :
+                          isPassed ? 'bg-emerald-50 border-emerald-400 text-emerald-600 shadow-sm' :
+                          'bg-white/80 border-slate-200 text-slate-400 backdrop-blur-sm'
+                        }`}>
+                          {isPassed ? '✓' : state.icon}
+                        </div>
+                        <span className={`text-[10px] sm:text-xs font-semibold mt-2.5 sm:mt-3 text-center leading-tight uppercase tracking-wider ${
+                          isActive ? 'text-blue-600 font-bold' : isPassed ? 'text-emerald-600' : 'text-slate-400'
+                        }`}>
+                          {state.label}
+                        </span>
                       </div>
-                      <span className={`text-xs font-semibold mt-3 text-center leading-tight uppercase tracking-wider hidden sm:block ${
-                        isActive ? 'text-blue-600 font-bold' : isPassed ? 'text-emerald-600' : 'text-slate-400'
-                      }`}>
-                        {state.label}
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Current state description */}
-              <div className="mt-8 pt-5 border-t border-slate-200/50 text-center">
-                <div className="inline-flex items-center justify-center space-x-2 bg-slate-50 border border-slate-200 px-6 py-2.5 rounded-full">
-                  <span className="text-lg">{DELIVERY_STATES[activeStateIndex]?.icon}</span>
-                  <span className="text-sm font-bold text-slate-700 tracking-wide">
+              <div className="mt-6 sm:mt-8 pt-4 sm:pt-5 border-t border-slate-200/50 text-center">
+                <div className="inline-flex items-center justify-center space-x-2 bg-slate-50 border border-slate-200 px-4 sm:px-6 py-2.5 rounded-full max-w-full">
+                  <span className="text-base sm:text-lg">{DELIVERY_STATES[activeStateIndex]?.icon}</span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-700 tracking-wide truncate">
                     {DELIVERY_STATES[activeStateIndex]?.desc}
                   </span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="glass-card rounded-3xl p-12 flex flex-col items-center justify-center text-center shadow-sm border-dashed border-2 border-slate-300/50">
-              <span className="text-6xl mb-5 opacity-40 grayscale">💤</span>
-              <h3 className="text-xl font-bold text-slate-700 tracking-tight">No Active Deliveries</h3>
-              <p className="text-sm text-slate-500 max-w-sm mt-3 font-medium leading-relaxed">
-                The real-time status tracker will activate here once you place a new delivery request or confirm an incoming one.
+            <div className="glass-card rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center shadow-sm border-dashed border-2 border-slate-300/50">
+              <span className="text-5xl sm:text-6xl mb-4 sm:mb-5 opacity-40 grayscale">💤</span>
+              <h3 className="text-lg sm:text-xl font-bold text-slate-700 tracking-tight">No Active Deliveries</h3>
+              <p className="text-xs sm:text-sm text-slate-500 max-w-sm mt-2 sm:mt-3 font-medium leading-relaxed">
+                The real-time status tracker will activate here once you place a new delivery request.
               </p>
             </div>
           )}
@@ -323,18 +352,17 @@ export default function UserDashboard() {
 
           {/* SVG Map */}
           <div className="lg:col-span-2 relative">
-            {!isRobotOnline && (
-              <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md rounded-3xl border border-red-100 shadow-inner">
-                <span className="text-4xl mb-3 opacity-80 animate-pulse">📡</span>
-                <h4 className="font-bold text-red-600 text-lg tracking-tight">Robot Offline / Not Powered</h4>
-              </div>
-            )}
-            <div className="glass-card rounded-3xl p-6 shadow-sm h-full flex flex-col">
-              <div className="flex justify-between items-center mb-6">
+            <div className="glass-card rounded-3xl p-5 sm:p-6 shadow-sm h-full flex flex-col">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 tracking-tight">Faculty Floor Map</h3>
-                  <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-widest">Live telemetry position</p>
+                  <p className="text-xs font-semibold text-slate-500 mt-0.5 uppercase tracking-widest">
+                    {isRobotOnline ? 'Live telemetry position' : 'Faculty Layout Map'}
+                  </p>
                 </div>
+                <span className={`self-start sm:self-auto text-[10px] border px-3 py-1 rounded-full font-bold uppercase tracking-wider ${isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                  {isRobotOnline ? '🟢 Live Sync' : '📡 Standby Telemetry'}
+                </span>
               </div>
 
               <div className="w-full flex-1 bg-slate-100/50 rounded-3xl border border-slate-200/60 p-4 flex justify-center items-center shadow-inner overflow-hidden relative">

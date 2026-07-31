@@ -81,15 +81,15 @@ export default function AdminDashboard() {
         {/* ── HEADER ─────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Admin Control Panel</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Admin Control Panel</h1>
             <p className="text-slate-500 text-xs mt-1 uppercase font-semibold tracking-wider">
               OfficeMate Robot — Faculty of Information Technology, UoM
             </p>
           </div>
-          <div className={`flex items-center space-x-2 bg-white border px-4 py-2 rounded-2xl shadow-sm ${isRobotOnline ? 'border-emerald-200/60' : 'border-red-200/60'}`}>
-            <span className={`h-2.5 w-2.5 rounded-full ${isRobotOnline ? 'bg-emerald-500 animate-pulse' : 'bg-red-500 animate-pulse'}`} />
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${isRobotOnline ? 'text-emerald-600' : 'text-red-600'}`}>
-              {isRobotOnline ? 'Robot Online' : 'Robot Offline'}
+          <div className={`flex items-center space-x-2.5 bg-white border px-4 py-2 rounded-2xl shadow-sm self-start sm:self-auto ${isRobotOnline ? 'border-emerald-200/60' : 'border-amber-200/60'}`}>
+            <span className={`h-2.5 w-2.5 rounded-full ${isRobotOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${isRobotOnline ? 'text-emerald-600' : 'text-amber-700'}`}>
+              {isRobotOnline ? 'Robot Online' : 'Hardware Standby'}
             </span>
           </div>
         </div>
@@ -98,10 +98,10 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Robot Manual Controls */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-md">
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-md">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Robot Controls</span>
             <h3 className="text-lg font-bold text-slate-800 mt-1 mb-5">Manual Override</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <button
                 disabled={!isRobotOnline}
                 onClick={() => handleRobotCommand('PAUSE')}
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
                 className={`p-4 border text-white font-extrabold rounded-xl col-span-2 text-xs uppercase tracking-widest text-center shadow-md transition ${
                   isRobotOnline
                     ? 'bg-red-600 hover:bg-red-700 border-red-700 active:scale-[0.98]'
-                    : 'bg-red-400 border-red-400 cursor-not-allowed opacity-60'
+                    : 'bg-slate-400 border-slate-400 cursor-not-allowed opacity-60'
                 }`}
               >
                 🚨 EMERGENCY STOP
@@ -150,13 +150,13 @@ export default function AdminDashboard() {
           </div>
 
           {/* System Health */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-md">
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-md">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Health</span>
             <h3 className="text-lg font-bold text-slate-800 mt-1 mb-5">Status Check</h3>
             <div className="space-y-4 text-xs font-semibold">
               {[
-                { label: 'Navigation System', status: isRobotOnline ? `🟢 ${rosData.navStatus}` : '🔴 Offline', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
-                { label: 'Obstacle Sensors', status: isRobotOnline ? (rosData.obstacleDist < 50 ? `🟡 ${rosData.obstacleDist.toFixed(1)}cm` : '🟢 CLEAR') : '🔴 Disconnected', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200' },
+                { label: 'Navigation System', status: isRobotOnline ? `🟢 ${rosData.navStatus}` : '📡 Telemetry Standby', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' },
+                { label: 'Obstacle Sensors', status: isRobotOnline ? (rosData.obstacleDist < 50 ? `🟡 ${rosData.obstacleDist.toFixed(1)}cm` : '🟢 CLEAR') : '📡 Sensor Standby', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' },
               ].map(item => (
                 <div key={item.label} className="flex justify-between items-center border-b border-slate-100 pb-2.5">
                   <span className="text-slate-500">{item.label}</span>
