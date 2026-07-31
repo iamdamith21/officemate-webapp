@@ -7,11 +7,32 @@ import { DELIVERY_STATES } from '../../constants';
 import { getStatusColor } from '../../utils/helpers';
 import RobotLiveView from './RobotLiveView';
 import NavigatePanel from './NavigatePanel';
+import useDeliveryMission from '../../hooks/useDeliveryMission';
 
 export default function AdminDashboard() {
   const { deliveryRequests, fetchDeliveries, addNotification, isRobotOnline, rosData, batteryValid } = useAuth();
   const [loading, setLoading] = useState(true);
   const robotStatus = useRobotStatus();
+  const mission = useDeliveryMission();
+
+  // Hand a stored delivery to the robot's mission FSM, then advance the record
+  // so the two do not disagree. The status is only moved if the goal was
+  // actually accepted — marking a delivery "Heading to Sender" when the robot
+  // never got the mission is worse than leaving it Requested.
+  const handleSendRobot = async (req) => {
+    if (!mission.dispatch(req)) return;
+    try {
+      await API.patch(`/deliveries/update-status/${req._id}`, { status: 'Heading to Sender' });
+      addNotification(
+        'Robot Dispatched',
+        `Robot is collecting from ${req.pickupLocation} for ${req.recipientName}.`
+      );
+      await fetchDeliveries();
+    } catch {
+      // The robot has the mission either way; only the record failed to update.
+      addNotification('Robot Dispatched', 'Mission sent, but the delivery record did not update.');
+    }
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -93,6 +114,40 @@ export default function AdminDashboard() {
             </span>
           </div>
         </div>
+
+        {/* ── ACTIVE MISSION ───────────────────────────────────
+            Shown only once a mission has been dispatched from here. The FSM
+            reports its state on every transition, so this is the robot's own
+            account of what it is doing — not the delivery record's guess. */}
+        {mission.status !== 'idle' && (
+          <div
+            className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border px-5 py-3.5 ${
+              mission.status === 'succeeded' ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : mission.status === 'failed' || mission.status === 'error' ? 'border-rose-200 bg-rose-50 text-rose-800'
+              : mission.status === 'canceled' ? 'border-amber-200 bg-amber-50 text-amber-800'
+              : 'border-sky-200 bg-sky-50 text-sky-800'
+            }`}
+          >
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">
+                {mission.isBusy ? 'Mission in progress' : 'Mission finished'}
+              </span>
+              <p className="text-sm font-semibold mt-0.5">{mission.message}</p>
+              {(mission.stateName || mission.detail) && (
+                <p className="text-[11px] mt-0.5 opacity-80">
+                  {mission.stateName}
+                  {mission.detail ? ` — ${mission.detail}` : ''}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={mission.isBusy ? mission.cancel : mission.reset}
+              className="shrink-0 self-start sm:self-auto rounded-xl border border-current px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:opacity-80"
+            >
+              {mission.isBusy ? 'Cancel mission' : 'Dismiss'}
+            </button>
+          </div>
+        )}
 
         {/* ── SECTION 1: CONTROLS & DIAGNOSTICS ───────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -264,14 +319,31 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {isInProgress && (
+                    {/* Same two actions as the desktop table — dispatching has
+                        to be reachable on mobile too, since that is where these
+                        requests are most likely to be handled. */}
+                    {!isCompleted && (
                       <div className="pt-2 border-t border-slate-100 flex justify-end">
-                        <button
-                          onClick={() => handleAdvanceState(req)}
-                          className="w-full py-2 bg-blue-600 text-white text-[10px] font-bold rounded-xl transition uppercase tracking-wider active:scale-[0.98] shadow-sm"
-                        >
-                          ▶ Advance Next Step
-                        </button>
+                        {isInProgress ? (
+                          <button
+                            onClick={() => handleAdvanceState(req)}
+                            className="w-full py-2 bg-blue-600 text-white text-[10px] font-bold rounded-xl transition uppercase tracking-wider active:scale-[0.98] shadow-sm"
+                          >
+                            ▶ Advance Next Step
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleSendRobot(req)}
+                            disabled={!isRobotOnline || mission.isBusy}
+                            className={`w-full py-2 text-[10px] font-bold rounded-xl transition uppercase tracking-wider shadow-sm ${
+                              isRobotOnline && !mission.isBusy
+                                ? 'bg-sky-600 text-white active:scale-[0.98]'
+                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            }`}
+                          >
+                            🤖 Send Robot
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -327,7 +399,24 @@ export default function AdminDashboard() {
                               ▶ Next Step
                             </button>
                           ) : (
-                            <span className="text-amber-500 text-[10px] font-semibold">Awaiting recipient</span>
+                            <button
+                              onClick={() => handleSendRobot(req)}
+                              disabled={!isRobotOnline || mission.isBusy}
+                              title={
+                                !isRobotOnline
+                                  ? 'The robot is not connected'
+                                  : mission.isBusy
+                                    ? 'The robot is already on a mission'
+                                    : 'Send the robot to collect and deliver this'
+                              }
+                              className={`px-4 py-2 text-[10px] font-bold rounded-xl transition uppercase tracking-wider ${
+                                isRobotOnline && !mission.isBusy
+                                  ? 'bg-sky-600 hover:bg-sky-700 text-white active:scale-[0.98]'
+                                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                              }`}
+                            >
+                              🤖 Send Robot
+                            </button>
                           )}
                         </td>
                       </tr>

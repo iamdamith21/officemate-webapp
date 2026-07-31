@@ -128,4 +128,29 @@ export const NAV_LOCATION_BY_ROSNAME = Object.fromEntries(
 // Labels a delivery can actually be *driven* for, as opposed to merely recorded.
 export const NAVIGABLE_ROOMS = NAV_LOCATIONS.map(l => l.label);
 
+/**
+ * Turn a stored delivery field into a NAV_LOCATIONS entry, or null.
+ *
+ * Needed because the two ends of a delivery are stored in different shapes:
+ * `pickupLocation` is a bare room label ("Room 1"), but `deliveryDestination`
+ * is a COMPOSITE built at submit time as `${department} — ${room}`. So the room
+ * has to be recovered from the string before the robot can be told where to go.
+ *
+ * Every dash-separated segment is tried rather than assuming the room comes
+ * last: the separator has been both an em dash and a plain hyphen in this
+ * codebase, and a wrong split simply fails to match instead of resolving to the
+ * wrong room. Returning null is meaningful — it means the delivery names a place
+ * with no surveyed pose, so it can be recorded but never driven.
+ */
+export function resolveRosLocation(value) {
+  if (!value || typeof value !== 'string') return null;
+  const direct = NAV_LOCATION_BY_LABEL[value.trim()];
+  if (direct) return direct;
+  for (const part of value.split(/[—–|-]/)) {
+    const hit = NAV_LOCATION_BY_LABEL[part.trim()];
+    if (hit) return hit;
+  }
+  return null;
+}
+
 export const APP_VERSION = 'OfficeMate V1.0 2026';
