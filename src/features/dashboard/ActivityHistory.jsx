@@ -44,7 +44,60 @@ export default function ActivityHistory() {
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Card List View (Fits 100% on mobile screens — zero side scroll) */}
+          <div className="block md:hidden space-y-3">
+            {allMyDeliveries.length > 0 ? (
+              allMyDeliveries.map((d) => {
+                const isSender = d.senderEmail?.toLowerCase() === user?.email?.toLowerCase();
+                return (
+                  <div key={d._id} className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 font-medium text-xs">
+                        {new Date(d.createdAt).toLocaleDateString()}
+                      </span>
+                      <span className={`px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider ${isSender ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
+                        {isSender ? 'Sender' : 'Recipient'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Ref ID</span>
+                        <span className="font-bold text-slate-500 text-xs">#{d._id?.slice(-6).toUpperCase()}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Counterparty</span>
+                        <span className="font-bold text-slate-700">{isSender ? d.recipientName : d.employeeId?.name}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100 items-center">
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Item</span>
+                        <span className="font-bold text-slate-800">{d.description || 'Documents'}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-block px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider border shadow-sm ${
+                          d.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                          d.status === 'Cancelled' ? 'bg-red-50 text-red-600 border-red-200' :
+                          'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}>
+                          {d.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-slate-500 font-bold uppercase tracking-widest text-xs">
+                📭 No delivery history found.
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b-2 border-slate-100 text-slate-500 font-bold uppercase tracking-widest text-xs">

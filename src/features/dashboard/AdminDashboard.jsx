@@ -224,7 +224,68 @@ export default function AdminDashboard() {
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Card List View (Fits 100% on mobile screens — zero side scroll) */}
+          <div className="block md:hidden space-y-3">
+            {deliveryRequests.length > 0 ? (
+              deliveryRequests.map((req) => {
+                const isCompleted = req.status === 'Completed' || req.status === 'Cancelled';
+                const isInProgress = ['Heading to Sender', 'Heading to Recipient', 'Awaiting Pickup'].includes(req.status);
+
+                return (
+                  <div key={req._id} className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-800 text-xs">
+                        From: {req.employeeId?.name || '—'}
+                      </span>
+                      <span className={`px-2.5 py-1 rounded-xl text-[9px] font-bold uppercase tracking-wider border ${getStatusColor(req.status)}`}>
+                        {req.status || 'Requested'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Recipient</span>
+                        <span className="font-bold text-slate-700">{req.recipientName || '—'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Item</span>
+                        <span className="font-bold text-slate-700">{req.description || 'Documents'}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Pickup</span>
+                        <span className="text-slate-600 font-medium">{req.pickupLocation || '—'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Destination</span>
+                        <span className="text-slate-600 font-medium truncate block">{req.deliveryDestination || '—'}</span>
+                      </div>
+                    </div>
+
+                    {isInProgress && (
+                      <div className="pt-2 border-t border-slate-100 flex justify-end">
+                        <button
+                          onClick={() => handleAdvanceState(req)}
+                          className="w-full py-2 bg-blue-600 text-white text-[10px] font-bold rounded-xl transition uppercase tracking-wider active:scale-[0.98] shadow-sm"
+                        >
+                          ▶ Advance Next Step
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-slate-400 font-bold uppercase tracking-wider text-xs">
+                📭 No delivery requests found.
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">

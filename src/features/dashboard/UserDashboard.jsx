@@ -207,31 +207,64 @@ export default function UserDashboard() {
                 </div>
               </div>
 
-              {/* 5-step horizontal pipeline — mobile touch responsive */}
-              <div className="overflow-x-auto pb-4 pt-2 -mx-2 px-2 sm:overflow-visible sm:pb-0 sm:pt-0">
-                <div className="flex items-center justify-between relative min-w-[500px] sm:min-w-0 px-2 sm:px-6">
-                  <div className="absolute top-5 left-8 right-8 h-1 bg-slate-100/80 z-0 rounded-full" />
-                  {DELIVERY_STATES.map((state, index) => {
-                    const isPassed = index < activeStateIndex;
-                    const isActive = index === activeStateIndex;
-                    return (
-                      <div key={state.key} className="flex flex-col items-center z-10 relative flex-1">
-                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center text-sm sm:text-base border-2 transition-all duration-300 ${
-                          isActive ? 'bg-blue-600 border-transparent text-white shadow-lg shadow-blue-500/40 scale-110 sm:scale-125' :
-                          isPassed ? 'bg-emerald-50 border-emerald-400 text-emerald-600 shadow-sm' :
-                          'bg-white/80 border-slate-200 text-slate-400 backdrop-blur-sm'
-                        }`}>
-                          {isPassed ? '✓' : state.icon}
-                        </div>
-                        <span className={`text-[10px] sm:text-xs font-semibold mt-2.5 sm:mt-3 text-center leading-tight uppercase tracking-wider ${
-                          isActive ? 'text-blue-600 font-bold' : isPassed ? 'text-emerald-600' : 'text-slate-400'
-                        }`}>
-                          {state.label}
-                        </span>
+              {/* Step Pipeline — Responsive Layout (No horizontal scrolling required) */}
+              {/* Desktop Stepper */}
+              <div className="hidden sm:flex items-center justify-between relative px-2 sm:px-6 pt-2 pb-2">
+                <div className="absolute top-5 left-8 right-8 h-1 bg-slate-100/80 z-0 rounded-full" />
+                {DELIVERY_STATES.map((state, index) => {
+                  const isPassed = index < activeStateIndex;
+                  const isActive = index === activeStateIndex;
+                  return (
+                    <div key={state.key} className="flex flex-col items-center z-10 relative flex-1">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-base border-2 transition-all duration-300 ${
+                        isActive ? 'bg-blue-600 border-transparent text-white shadow-lg shadow-blue-500/40 scale-125' :
+                        isPassed ? 'bg-emerald-50 border-emerald-400 text-emerald-600 shadow-sm' :
+                        'bg-white/80 border-slate-200 text-slate-400 backdrop-blur-sm'
+                      }`}>
+                        {isPassed ? '✓' : state.icon}
                       </div>
-                    );
-                  })}
-                </div>
+                      <span className={`text-xs font-semibold mt-3 text-center leading-tight uppercase tracking-wider ${
+                        isActive ? 'text-blue-600 font-bold' : isPassed ? 'text-emerald-600' : 'text-slate-400'
+                      }`}>
+                        {state.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Mobile Vertical Timeline (Fits on any screen size with zero side-scrolling) */}
+              <div className="block sm:hidden space-y-3 pt-2">
+                {DELIVERY_STATES.map((state, index) => {
+                  const isPassed = index < activeStateIndex;
+                  const isActive = index === activeStateIndex;
+                  return (
+                    <div key={state.key} className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${
+                      isActive ? 'bg-blue-50/80 border-blue-200 text-blue-900 shadow-sm' :
+                      isPassed ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800' :
+                      'bg-slate-50/50 border-slate-100 text-slate-400'
+                    }`}>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold border shrink-0 ${
+                        isActive ? 'bg-blue-600 text-white border-blue-600' :
+                        isPassed ? 'bg-emerald-500 text-white border-emerald-500' :
+                        'bg-white border-slate-200 text-slate-400'
+                      }`}>
+                        {isPassed ? '✓' : state.icon}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-xs font-bold uppercase tracking-wider ${isActive ? 'text-blue-700' : isPassed ? 'text-emerald-700' : 'text-slate-500'}`}>
+                          {state.label}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">{state.desc}</p>
+                      </div>
+                      {isActive && (
+                        <span className="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-widest shrink-0">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Current state description */}
@@ -499,7 +532,53 @@ export default function UserDashboard() {
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Card List View (Fits 100% on mobile screens — zero side scroll) */}
+          <div className="block md:hidden space-y-3">
+            {allMyDeliveries.length > 0 ? (
+              allMyDeliveries.map((d) => {
+                const stateIdx = getStateIndex(d.status);
+                return (
+                  <div key={d._id} className="bg-white/80 border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-500 text-xs tracking-wider">
+                        Ref: #{d._id?.slice(-6).toUpperCase()}
+                      </span>
+                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${
+                        d.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                        d.status === 'Cancelled' ? 'bg-red-50 text-red-600 border-red-200' :
+                        'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}>
+                        <span className="mr-1">{DELIVERY_STATES[stateIdx]?.icon}</span> {d.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Sender</span>
+                        <span className="font-bold text-slate-700">{d.employeeId?.name || '—'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Recipient</span>
+                        <span className="font-bold text-slate-700">{d.recipientName || '—'}</span>
+                      </div>
+                    </div>
+
+                    <div className="text-xs pt-1">
+                      <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Item Contents</span>
+                      <span className="font-bold text-slate-800">{d.description || 'Documents'}</span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-slate-500 font-bold uppercase tracking-widest text-xs">
+                📭 No deliveries yet.
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b-2 border-slate-100 text-slate-500 font-bold uppercase tracking-widest text-xs">
