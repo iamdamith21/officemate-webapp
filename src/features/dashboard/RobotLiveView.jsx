@@ -211,18 +211,19 @@ export default function RobotLiveView() {
   }, [haveMap]);
 
   const status = !rosConn
-    ? { text: 'Standby / Offline', tone: 'text-amber-700 bg-amber-50 border-amber-200' }
+    ? { text: 'Robot Standby', tone: 'text-amber-700 bg-amber-50 border-amber-200' }
     : !haveMap
-      ? { text: 'Loading /map', tone: 'text-sky-700 bg-sky-50 border-sky-200' }
-      : { text: 'Live Telemetry', tone: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
+      ? { text: 'Loading Map', tone: 'text-sky-700 bg-sky-50 border-sky-200' }
+      : { text: 'Live Location Active', tone: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-md">
+    <div className="bg-white border border-slate-200/80 rounded-3xl p-4 sm:p-6 shadow-md">
+      {/* Header */}
       <div className="flex justify-between items-start flex-wrap gap-3">
         <div>
-          <h3 className="text-lg font-bold text-slate-800">Live Robot SLAM & Telemetry</h3>
+          <h3 className="text-base sm:text-lg font-bold text-slate-800">Live Robot Location & Map</h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            SLAM map, live LiDAR scan, localized pose and planned route — streamed from ROS
+            Real-time view of the robot's current position and active delivery path
           </p>
         </div>
         <span className={`text-[10px] border px-3 py-1 rounded-full font-bold uppercase tracking-wider ${status.tone}`}>
@@ -230,41 +231,43 @@ export default function RobotLiveView() {
         </span>
       </div>
 
-      <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-inner relative overflow-hidden mt-6 min-h-[320px] sm:min-h-[420px] flex items-center justify-center">
+      {/* Medium size live preview area */}
+      <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-inner relative overflow-hidden mt-4 min-h-[220px] sm:min-h-[280px] max-h-[320px] flex items-center justify-center">
         <canvas
           ref={canvasRef}
-          width={900}
-          height={620}
-          className="w-full h-auto block"
+          width={800}
+          height={420}
+          className="w-full h-[220px] sm:h-[280px] object-contain block"
         />
 
         {!rosConn && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 text-center px-6 backdrop-blur-md">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl mb-4 shadow-lg">
-              📡
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl mb-3 shadow-md">
+              🤖
             </div>
-            <h4 className="font-bold text-slate-100 text-base sm:text-lg tracking-tight">ROS Hardware Telemetry Standby</h4>
-            <p className="text-xs text-slate-400 mt-2 max-w-md leading-relaxed font-medium">
-              Waiting for live ROS bridge connection at <code className="font-mono bg-slate-800 text-amber-300 px-2 py-0.5 rounded border border-slate-700">{rosBridgeUrl}</code>.
+            <h4 className="font-bold text-slate-100 text-sm sm:text-base tracking-tight">Robot Connection Off</h4>
+            <p className="text-xs text-slate-400 mt-1.5 max-w-sm leading-relaxed font-medium">
+              The robot is currently offline or sleeping. Once turned on, its live map location will automatically display here.
             </p>
-            <div className="mt-5 flex flex-wrap justify-center gap-2 text-[10px] uppercase tracking-wider font-bold">
-              <span className="bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg">
-                Topic: /map · /scan · /amcl_pose
+            <div className="mt-4 flex flex-wrap justify-center gap-2 text-[10px] font-bold">
+              <span className="bg-slate-900 text-slate-300 border border-slate-700/80 px-3 py-1 rounded-full">
+                ✨ Live Interactive Map
               </span>
-              <span className="bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg">
-                WebSocket Port: 9090
+              <span className="bg-slate-900 text-slate-300 border border-slate-700/80 px-3 py-1 rounded-full">
+                📍 Real-Time Location
               </span>
             </div>
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 text-[11px] font-semibold text-slate-500">
+      {/* Simple Legend */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3.5 text-[11px] font-semibold text-slate-500">
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Robot</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block" /> LiDAR returns</span>
-        <span className="flex items-center gap-1.5"><span className="w-4 h-0.5 bg-green-500 inline-block" /> Planned route</span>
-        <span className="ml-auto font-mono text-slate-400">
-          {poseText ? `pose ${poseText}` : (isRobotOnline ? 'awaiting localisation' : 'hardware standby')}
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block" /> Obstacle Sensors</span>
+        <span className="flex items-center gap-1.5"><span className="w-4 h-0.5 bg-green-500 inline-block" /> Active Path</span>
+        <span className="ml-auto font-mono text-slate-400 text-[10px]">
+          {poseText ? `Location: Active` : (isRobotOnline ? 'Locating...' : 'Robot Offline')}
         </span>
       </div>
     </div>

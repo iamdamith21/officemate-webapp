@@ -155,8 +155,8 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-bold text-slate-800 mt-1 mb-5">Status Check</h3>
             <div className="space-y-4 text-xs font-semibold">
               {[
-                { label: 'Navigation System', status: isRobotOnline ? `🟢 ${rosData.navStatus}` : '📡 Telemetry Standby', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' },
-                { label: 'Obstacle Sensors', status: isRobotOnline ? (rosData.obstacleDist < 50 ? `🟡 ${rosData.obstacleDist.toFixed(1)}cm` : '🟢 CLEAR') : '📡 Sensor Standby', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' },
+                { label: 'Navigation System', status: isRobotOnline ? `🟢 ${rosData.navStatus}` : '🟡 Standby', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' },
+                { label: 'Obstacle Sensors', status: isRobotOnline ? (rosData.obstacleDist < 50 ? `🟡 ${rosData.obstacleDist.toFixed(1)}cm` : '🟢 CLEAR') : '🟡 Standby', colorClass: isRobotOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' },
               ].map(item => (
                 <div key={item.label} className="flex justify-between items-center border-b border-slate-100 pb-2.5">
                   <span className="text-slate-500">{item.label}</span>

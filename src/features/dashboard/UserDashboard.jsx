@@ -163,25 +163,25 @@ export default function UserDashboard() {
             <div className="bg-slate-900/90 text-white border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all">
               <div className="flex items-center space-x-3.5">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 text-xl">
-                  📡
+                  🤖
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-sm text-slate-100 tracking-wide">Robot Hardware Standby Mode</h4>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <h4 className="font-bold text-sm text-slate-100 tracking-wide">Robot Standby Mode</h4>
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
                       Standby
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 mt-0.5 font-medium leading-relaxed">
-                    Hardware telemetry link is currently disconnected. Web order placement and request processing remain 100% active.
+                    The delivery robot is currently offline or sleeping. Order placement and request tracking remain 100% active.
                   </p>
                 </div>
               </div>
-              <div className="text-right shrink-0">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider block">Bridge Endpoint</span>
-                <code className="text-xs text-amber-300 font-mono bg-slate-800/80 px-2 py-1 rounded border border-slate-700 block mt-0.5">
-                  ws://localhost:9090
-                </code>
+              <div className="text-left sm:text-right shrink-0">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider block">Service Status</span>
+                <span className="text-xs text-emerald-400 font-bold block mt-0.5">
+                  Web Dispatch Ready
+                </span>
               </div>
             </div>
           )}

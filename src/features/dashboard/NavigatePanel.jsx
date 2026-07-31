@@ -46,36 +46,48 @@ export default function NavigatePanel() {
       </div>
 
       <p className="mt-1 mb-5 text-xs text-slate-500 font-medium">
-        Point-to-point test navigation — target autonomous coordinates for surveyed faculty locations.
+        Choose a destination and the robot will drive itself there.
       </p>
 
+      {/* Map poses are deliberately NOT rendered. They are engineering detail —
+          metres in the SLAM map frame, plus a heading — and showing them invites
+          the reader to treat them as room numbers. The location name is the
+          contract the rest of the system uses anyway. */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {NAV_LOCATIONS.map((loc) => {
           const isTarget = target?.id === loc.id;
+          const isDriving = isTarget && isBusy;
           return (
             <button
               key={loc.id}
               type="button"
               disabled={!isRosConnected || isBusy}
               onClick={() => goTo(loc)}
-              title={loc.note}
-              className={`rounded-xl border px-4 py-3 text-left transition ${
-                isTarget && isBusy
-                  ? 'border-sky-300 bg-sky-50'
-                  : 'border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98]'
+              className={`group flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition ${
+                isDriving
+                  ? 'border-sky-300 bg-sky-50 ring-1 ring-sky-200'
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]'
               } disabled:cursor-not-allowed disabled:opacity-50`}
             >
-              <span className="block text-sm font-semibold text-slate-800">
-                {loc.label}
-                {loc.isBase && (
-                  <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                    base
-                  </span>
-                )}
+              <span
+                aria-hidden="true"
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base ${
+                  isDriving ? 'bg-sky-100' : 'bg-slate-100 group-hover:bg-slate-200'
+                }`}
+              >
+                {loc.isBase ? '🏠' : '🚪'}
               </span>
-              <span className="mt-1 block font-mono text-[11px] text-slate-500">
-                x {loc.navSafe.x.toFixed(2)} &nbsp; y {loc.navSafe.y.toFixed(2)} &nbsp;{' '}
-                {loc.navSafe.yaw.toFixed(0)}°
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-slate-800">
+                  {loc.label}
+                </span>
+                <span className="mt-0.5 block text-[11px] font-medium text-slate-500">
+                  {isDriving
+                    ? 'On the way…'
+                    : loc.isBase
+                      ? 'Base station'
+                      : 'Delivery point'}
+                </span>
               </span>
             </button>
           );
@@ -91,8 +103,8 @@ export default function NavigatePanel() {
           <span>
             {message}
             {typeof distance === 'number' && (
-              <span className="ml-2 font-mono text-xs opacity-80">
-                {distance.toFixed(2)} m to go
+              <span className="ml-2 text-xs opacity-80">
+                {distance < 1 ? 'almost there' : `${distance.toFixed(1)} m to go`}
               </span>
             )}
           </span>
@@ -108,10 +120,13 @@ export default function NavigatePanel() {
         </div>
       )}
 
+      {/* Worth saying, without the jargon: the robot stops a little short of
+          these two because their surveyed spots are tight against a wall. Silent
+          would be worse — it would read as the robot missing its destination. */}
       {status === 'succeeded' && target?.dockCost > 0 && (
         <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-          Stopped at the approach pose, not the dock itself — {target.label}&apos;s
-          surveyed spot is too close to a wall for Nav2 to enter.
+          The robot stopped just short of {target.label} — that spot is too close
+          to a wall for it to pull all the way in.
         </p>
       )}
     </div>
