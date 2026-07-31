@@ -139,7 +139,7 @@ export default function Profile() {
                   <div className="bg-white/60 backdrop-blur-sm border border-slate-200/50 p-4 rounded-2xl shadow-sm sm:col-span-2 overflow-hidden">
                     <span className="text-xs text-slate-400 font-bold uppercase tracking-widest block mb-1">Mobile Number</span>
                     <span className="font-semibold text-slate-700 text-sm flex flex-wrap items-center gap-2">
-                      <span className="text-lg">🇱🇰</span>
+                      <span className="text-slate-400">📞</span>
                       <span className="break-words">
                         {user?.phone || <span className="text-slate-400 italic">Not set — add your number to receive SMS alerts</span>}
                       </span>
@@ -179,14 +179,13 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  {/* Mobile Number with SL prefix */}
+                  {/* Mobile Number with +94 country code */}
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mobile Number</label>
-                    <p className="text-xs text-slate-500 mb-2">🇱🇰 Sri Lanka — Used to receive SMS delivery alerts</p>
+                    <p className="text-xs text-slate-500 mb-2">Used to receive SMS delivery alerts (+94)</p>
                     <div className="flex items-stretch gap-2">
-                      {/* Sri Lanka flag prefix */}
-                      <div className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 whitespace-nowrap">
-                        <span className="text-lg">🇱🇰</span> +94
+                      <div className="flex items-center px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 whitespace-nowrap">
+                        +94
                       </div>
                       <input
                         type="tel"
