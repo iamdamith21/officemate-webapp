@@ -70,48 +70,55 @@ export const BASE_COORDS = ROOM_COORDS['Dean Sir Office'];
 // key the robot knows each one by. Send NAMES to the mission FSM; the
 // coordinates are here so the app can draw them and drive Nav2 directly.
 //
-// `dock` is where the robot was actually parked. `navSafe` is where Nav2 will
-// agree to drive.
+// `dock` and `navSafe` are now the SAME pose for all three, because the stored
+// locations were relocated on the robot (2026-07-31) onto ground Nav2 will
+// actually enter. `surveyedAt` keeps the original parked spot for reference.
 //
-// THAT DISTINCTION IS LOAD-BEARING, and it is the whole reason there are two
-// poses per location. Parking the robot somewhere proves it FITS; it does not
-// make it a legal Nav2 goal. Cells within the robot's 0.30 m circumscribed
-// radius of an obstacle are lethal whatever inflation_radius says. Measured
-// costmap cost at the docks: Dean's 99 (lethal), Room 1 93 (heavily inflated),
-// Room 2 0 (free) — so two of three docks are unreachable, and Nav2's only
-// complaint is "collision ahead" from the controller, which never names the
-// goal. Always send `navSafe`.
+// The reason they ever differed is worth keeping, because re-surveying will
+// reintroduce it: parking the robot somewhere proves it FITS, not that Nav2 will
+// drive there. Cells within the robot's 0.30 m circumscribed radius of an
+// obstacle are lethal whatever inflation_radius says, and a single cost-0 cell
+// is not enough either — RPP projects the footprint forward along the path, so a
+// free cell wedged against a wall still trips "collision ahead". The original
+// three measured 99 (lethal), 86 (inflated) and 0-but-no-clearance, and the
+// delivery FSM navigates to the STORED pose with no snapping of its own, so
+// every leg targeting them failed after three nav retries with nothing naming
+// the goal as the cause.
 //
-// Re-derive after any re-map with the robot's `tools/loccost.py`, which prints
-// the cost at every saved location and the nearest cell with real clearance.
+// After any re-map: `tools/loccost.py` to see the costs, then
+// `tools/nudge_locations.py --apply` to relocate them (restart the mission stack
+// afterwards — location_manager caches these at startup). Then update this table.
 export const NAV_LOCATIONS = [
   {
     id: 'dean_office',
     label: 'Dean Sir Office',
     rosName: 'base_station',        // also delivery_manager's base_location
     isBase: true,
-    dock:    { x: -0.490, y: -0.988, yaw: -3.1, z: -0.0272, w: 0.9996 },
+    dock:    { x: -0.040, y: -0.638, yaw: -3.1, z: -0.0272, w: 0.9996 },
     navSafe: { x: -0.040, y: -0.638, yaw: -3.1, z: -0.0272, w: 0.9996 },
-    dockCost: 99,
-    note: 'Docked against a wall — Nav2 stops 0.57 m short. Re-survey further out for true docking.',
+    dockCost: 0,
+    surveyedAt: { x: -0.490, y: -0.988 },   // original, cost 99
+    note: 'Moved 0.57 m off the original spot, which was against a wall. Approach point, not a charging dock.',
   },
   {
     id: 'room_1',
     label: 'Room 1',
     rosName: 'sender_desk',
-    dock:    { x: 1.150, y: 0.240, yaw: 89.6, z: 0.7046, w: 0.7096 },
-    navSafe: { x: 1.250, y: 0.040, yaw: 89.6, z: 0.7046, w: 0.7096 },
-    dockCost: 93,
-    note: 'Approach pose sits ~0.22 m off the dock.',
+    dock:    { x: 1.150, y: -0.060, yaw: 89.6, z: 0.7046, w: 0.7096 },
+    navSafe: { x: 1.150, y: -0.060, yaw: 89.6, z: 0.7046, w: 0.7096 },
+    dockCost: 0,
+    surveyedAt: { x: 1.150, y: 0.240 },     // original, cost 86
+    note: 'Moved 0.30 m off the original spot for clearance.',
   },
   {
     id: 'room_2',
     label: 'Room 2',
     rosName: 'recipient_desk',
-    dock:    { x: 2.157, y: -1.666, yaw: -5.4, z: -0.0467, w: 0.9989 },
-    navSafe: { x: 2.107, y: -1.566, yaw: -5.4, z: -0.0467, w: 0.9989 },
+    dock:    { x: 2.007, y: -1.566, yaw: -5.4, z: -0.0467, w: 0.9989 },
+    navSafe: { x: 2.007, y: -1.566, yaw: -5.4, z: -0.0467, w: 0.9989 },
     dockCost: 0,
-    note: 'Only dock already on free ground. Verified reached in 83 s.',
+    surveyedAt: { x: 2.157, y: -1.666 },    // original, cost 0 but no clearance
+    note: 'Moved 0.18 m — the original was free but had no clearance around it.',
   },
 ];
 
