@@ -262,6 +262,14 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
 router.post('/forgot-password', async (req, res) => {
+  // Declared out here, not in the try, because the catch below offers the link
+  // as a manual fallback. A `const` inside the try is block-scoped and simply
+  // not visible from the catch, so the error handler threw
+  // "ReferenceError: resetUrl is not defined" — failing precisely when it was
+  // needed, and turning a helpful 500 into an unhandled crash.
+  // Stays null until the token exists, so the catch can tell the two cases apart.
+  let resetUrl = null;
+
   try {
     const { email } = req.body;
     const employee = await Employee.findOne({ email: email.toLowerCase() });
@@ -278,7 +286,7 @@ router.post('/forgot-password', async (req, res) => {
     // Build the reset link from APP_BASE_URL (or the request origin) so it
     // works in dev and production without a hard-coded domain.
     const baseUrl = process.env.APP_BASE_URL || req.headers.origin || 'https://officemate-webapp.vercel.app';
-    const resetUrl = `${baseUrl}/reset-password/${token}`;
+    resetUrl = `${baseUrl}/reset-password/${token}`;
 
     // Guard: if SMTP isn't configured, log the link and simulate success instead of failing.
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS || process.env.SMTP_USER.includes('your-email')) {
@@ -328,13 +336,20 @@ router.post('/forgot-password', async (req, res) => {
         errorMsg = 'Email sending failed due to invalid SMTP credentials in the server configuration. Please check the environment variables.';
     }
     
-    // Provide the reset URL directly in the message as a fallback manual instruction
-    const fallbackMessage = `${errorMsg}\n\nMANUAL RESOLUTION: Please copy and paste the following link into your browser to reset your password:\n${resetUrl}`;
+    // Offer the reset URL as a manual fallback — but only if we got far enough
+    // to mint the token. Failing earlier (bad request body, user lookup, the
+    // employee.save()) leaves resetUrl null, and pasting "null" into the message
+    // as a reset link would be worse than not offering one.
+    const fallbackMessage = resetUrl
+      ? `${errorMsg}\n\nMANUAL RESOLUTION: Please copy and paste the following link into your browser to reset your password:\n${resetUrl}`
+      : errorMsg;
 
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: fallbackMessage,
-      resetUrl: resetUrl // Also passing it explicitly for the frontend to consume if needed
+      // Omitted rather than sent as null, so the frontend's truthiness check
+      // ("did we get a link?") keeps working unchanged.
+      ...(resetUrl ? { resetUrl } : {})
     });
   }
 });
