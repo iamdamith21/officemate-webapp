@@ -238,6 +238,23 @@ router.get('/find/:email', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// ─────────────────────────────────────────────────────────────────
+// 6b. Find Employee by Name (GET /api/employees/find-by-name/:name)
+//     Used by CreateDelivery to resolve recipient name to email & department.
+// ─────────────────────────────────────────────────────────────────
+router.get('/find-by-name/:name', async (req, res) => {
+  try {
+    const name = decodeURIComponent(req.params.name).trim();
+    const employee = await Employee.findOne({ name: new RegExp('^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') }).select('-password');
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'No staff member found with this name.' });
+    }
+    res.status(200).json({ success: true, data: employee });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 // ─────────────────────────────────────────────────────────────────
 // 7. Forgot Password (POST /api/employees/forgot-password)
 // ─────────────────────────────────────────────────────────────────

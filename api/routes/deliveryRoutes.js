@@ -36,10 +36,7 @@ router.post('/request', async (req, res) => {
     await newRequest.save();
     const populated = await newRequest.populate('employeeId');
 
-    // Send email alert to recipient.
-    // Skip cleanly if SMTP isn't configured — otherwise nodemailer attempts a
-    // real connection and can hang until the socket times out, delaying the
-    // response (the request itself must never wait on notifications).
+    // Send email alert to recipient & sender (registered emails).
     try {
       if (!process.env.SMTP_USER || !process.env.SMTP_PASS || process.env.SMTP_USER.includes('your-email')) {
         console.warn('[EMAIL] SMTP not configured — skipping delivery email.');
@@ -57,22 +54,30 @@ router.post('/request', async (req, res) => {
         },
       });
 
+      // Recipient notification
       await transporter.sendMail({
         from: process.env.SMTP_FROM || `"OfficeMate" <${process.env.SMTP_USER}>`,
         to: recipientEmail,
         subject: "New OfficeMate Delivery Request",
-        text: `Hello ${recipientName},\n\nYou have a new delivery request from ${senderEmail} waiting for your confirmation.\n\nDescription: ${description}\nPickup: ${pickupLocation}\nDestination: ${deliveryDestination}\n\nPlease login to your OfficeMate Dashboard to accept or decline the request.\n\nThank you,\nOfficeMate Delivery System`
+        text: `Hello ${recipientName},\n\nYou have a new delivery request from ${senderEmail}.\n\nDescription: ${description}\nPickup: ${pickupLocation}\nDestination: ${deliveryDestination}\n\nPlease login to your OfficeMate Dashboard to check the delivery status.\n\nThank you,\nOfficeMate Delivery System`
       });
-      console.log(`Email notification sent to ${recipientEmail}`);
+
+      // Sender notification email alert for registered user
+      if (senderEmail && senderEmail !== recipientEmail) {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || `"OfficeMate" <${process.env.SMTP_USER}>`,
+          to: senderEmail,
+          subject: "OfficeMate Delivery Confirmation",
+          text: `Hello,\n\nYour delivery request for "${description}" to ${recipientName} (${recipientEmail}) has been successfully placed.\n\nPickup: ${pickupLocation}\nDestination: ${deliveryDestination}\n\nThank you,\nOfficeMate Delivery System`
+        });
+      }
+
+      console.log(`Email notification sent to ${recipientEmail} and ${senderEmail}`);
     } catch (emailErr) {
       console.error('Failed to send email notification:', emailErr);
-      // We don't fail the request if email fails, it just skips the email.
     }
 
     // Send SMS alert to recipient.
-    // Phone source: explicit recipientPhone in the payload, otherwise the
-    // phone stored on the recipient's staff account (looked up by email).
-    // Non-blocking — the request still succeeds if SMS is unconfigured or fails.
     try {
       let phone = recipientPhone;
       if (!phone) {
@@ -84,8 +89,7 @@ router.post('/request', async (req, res) => {
         await sendSms(
           phone,
           `OfficeMate: Hi ${recipientName}, you have a new delivery request from ${senderEmail || 'a colleague'}. ` +
-          `Item: ${description || 'N/A'}. From: ${pickupLocation}. ` +
-          `Log in to your OfficeMate dashboard to accept or decline.`
+          `Item: ${description || 'N/A'}. From: ${pickupLocation}.`
         );
       } else {
         console.warn(`[SMS] No phone number on file for ${recipientEmail} — SMS skipped.`);
@@ -96,7 +100,7 @@ router.post('/request', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Delivery request submitted. Waiting for recipient confirmation.',
+      message: 'Delivery request submitted successfully.',
       data: populated
     });
   } catch (error) {

@@ -6,6 +6,7 @@ import useRobotStatus from '../../hooks/useRobotStatus';
 import { DELIVERY_STATES } from '../../constants';
 import { getStatusColor } from '../../utils/helpers';
 import RobotLiveView from './RobotLiveView';
+import NavigatePanel from './NavigatePanel';
 
 export default function AdminDashboard() {
   const { deliveryRequests, fetchDeliveries, addNotification, isRobotOnline, rosData, batteryValid } = useAuth();
@@ -289,6 +290,12 @@ export default function AdminDashboard() {
             the robot. Replaced with a real render of the SLAM map, live LiDAR
             returns, the localised pose and the planned route. */}
         <RobotLiveView />
+
+        {/* ── SECTION 5: MANUAL NAVIGATION ─────────────────────
+            Point-to-point navigation to the three surveyed locations, separate
+            from the delivery flow: no file, no RFID, no doors. Useful for
+            testing the map and for recalling the robot to base by hand. */}
+        <NavigatePanel />
 
       </div>
     </DashboardLayout>
