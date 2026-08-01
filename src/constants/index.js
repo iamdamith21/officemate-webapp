@@ -92,23 +92,13 @@ export const NAV_LOCATIONS = [
   {
     id: 'dean_office',
     label: 'Dean Sir Office',
-    rosName: 'base_station',        // also delivery_manager's base_location
+    rosName: 'base_station',
     isBase: true,
     dock:    { x: -0.040, y: -0.638, yaw: -3.1, z: -0.0272, w: 0.9996 },
     navSafe: { x: -0.040, y: -0.638, yaw: -3.1, z: -0.0272, w: 0.9996 },
     dockCost: 0,
-    surveyedAt: { x: -0.490, y: -0.988 },   // original, cost 99
+    surveyedAt: { x: -0.490, y: -0.988 },
     note: 'Moved 0.57 m off the original spot, which was against a wall. Approach point, not a charging dock.',
-  },
-  {
-    id: 'room_1',
-    label: 'Room 1',
-    rosName: 'sender_desk',
-    dock:    { x: 1.150, y: -0.060, yaw: 89.6, z: 0.7046, w: 0.7096 },
-    navSafe: { x: 1.150, y: -0.060, yaw: 89.6, z: 0.7046, w: 0.7096 },
-    dockCost: 0,
-    surveyedAt: { x: 1.150, y: 0.240 },     // original, cost 86
-    note: 'Moved 0.30 m off the original spot for clearance.',
   },
   {
     id: 'room_2',
@@ -117,8 +107,18 @@ export const NAV_LOCATIONS = [
     dock:    { x: 2.007, y: -1.566, yaw: -5.4, z: -0.0467, w: 0.9989 },
     navSafe: { x: 2.007, y: -1.566, yaw: -5.4, z: -0.0467, w: 0.9989 },
     dockCost: 0,
-    surveyedAt: { x: 2.157, y: -1.666 },    // original, cost 0 but no clearance
+    surveyedAt: { x: 2.157, y: -1.666 },
     note: 'Moved 0.18 m — the original was free but had no clearance around it.',
+  },
+  {
+    id: 'room_1',
+    label: 'Room 1',
+    rosName: 'sender_desk',
+    dock:    { x: 1.150, y: -0.060, yaw: 89.6, z: 0.7046, w: 0.7096 },
+    navSafe: { x: 1.150, y: -0.060, yaw: 89.6, z: 0.7046, w: 0.7096 },
+    dockCost: 0,
+    surveyedAt: { x: 1.150, y: 0.240 },
+    note: 'Moved 0.30 m off the original spot for clearance.',
   },
 ];
 
