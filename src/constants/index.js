@@ -7,25 +7,15 @@ export const DEPARTMENTS = [
   'Department of Interdisciplinary Studies'
 ];
 
-// The first three are the surveyed, drivable locations — see NAV_LOCATIONS at
-// the bottom of this file. The rest are labels only: they have no pose on the
-// map, so a delivery to one can be recorded but never executed.
-export const ROOMS = [
-  'Dean Sir Office',
-  'Room 1',
-  'Room 2',
-  'IT Room 101',
-  'IT Room 102',
-  'IT Lab 201',
-  'CT Room 103',
-  'CT Lab 202',
-  'IDS Room 104',
-  'IDS Lab 203',
-  'Lecture Hall A',
-  'Lecture Hall B',
-  'Staff Room',
-  'Conference Room'
-];
+// ROOMS is DERIVED from NAV_LOCATIONS, further down this file — see the export
+// after NAVIGABLE_ROOMS. It deliberately no longer contains the eleven invented
+// labels (IT Room 101, Lecture Hall A, ...): none of them had a surveyed pose,
+// so a delivery to one could be recorded and emailed but never actually driven,
+// and the robot would refuse it at dispatch. Offering a destination the robot
+// cannot reach is worse than not offering it.
+//
+// To add a room: survey it on the robot (`loc.sh save <name>`), check it with
+// loccost.py, then `scripts/sync_locations.py` — it appears here automatically.
 
 export const DELIVERY_STATES = [
   { key: 'Requested',            label: 'Requested',          icon: '📋', desc: 'Awaiting recipient confirmation' },
@@ -94,8 +84,8 @@ export const NAV_LOCATIONS = [
     label: 'Dean Sir Office',
     rosName: 'base_station',
     isBase: true,
-    dock:    { x: -0.040, y: -0.638, yaw: -3.1, z: -0.0272, w: 0.9996 },
-    navSafe: { x: -0.040, y: -0.638, yaw: -3.1, z: -0.0272, w: 0.9996 },
+    dock:    { x: -0.145, y: 0.145, yaw: 3.3, z: 0.0287, w: 0.9996 },
+    navSafe: { x: -0.145, y: 0.145, yaw: 3.3, z: 0.0287, w: 0.9996 },
     dockCost: 0,
     surveyedAt: { x: -0.490, y: -0.988 },
     note: 'Moved 0.57 m off the original spot, which was against a wall. Approach point, not a charging dock.',
@@ -104,8 +94,8 @@ export const NAV_LOCATIONS = [
     id: 'room_2',
     label: 'Room 2',
     rosName: 'recipient_desk',
-    dock:    { x: 2.007, y: -1.566, yaw: -5.4, z: -0.0467, w: 0.9989 },
-    navSafe: { x: 2.007, y: -1.566, yaw: -5.4, z: -0.0467, w: 0.9989 },
+    dock:    { x: 6.391, y: 0.366, yaw: -0.6, z: -0.0054, w: 1.0000 },
+    navSafe: { x: 6.391, y: 0.366, yaw: -0.6, z: -0.0054, w: 1.0000 },
     dockCost: 0,
     surveyedAt: { x: 2.157, y: -1.666 },
     note: 'Moved 0.18 m — the original was free but had no clearance around it.',
@@ -114,8 +104,8 @@ export const NAV_LOCATIONS = [
     id: 'room_1',
     label: 'Room 1',
     rosName: 'sender_desk',
-    dock:    { x: 1.150, y: -0.060, yaw: 89.6, z: 0.7046, w: 0.7096 },
-    navSafe: { x: 1.150, y: -0.060, yaw: 89.6, z: 0.7046, w: 0.7096 },
+    dock:    { x: 2.516, y: 0.289, yaw: -2.8, z: -0.0242, w: 0.9997 },
+    navSafe: { x: 2.516, y: 0.289, yaw: -2.8, z: -0.0242, w: 0.9997 },
     dockCost: 0,
     surveyedAt: { x: 1.150, y: 0.240 },
     note: 'Moved 0.30 m off the original spot for clearance.',
@@ -134,6 +124,12 @@ export const NAV_LOCATION_BY_ROSNAME = Object.fromEntries(
 
 // Labels a delivery can actually be *driven* for, as opposed to merely recorded.
 export const NAVIGABLE_ROOMS = NAV_LOCATIONS.map(l => l.label);
+
+// The dropdowns' single source of truth. Defined here rather than at the top of
+// the file because it depends on NAV_LOCATIONS, which sync_locations.py
+// regenerates from the robot — so surveying a new location is all it takes for
+// it to appear in the UI.
+export const ROOMS = NAVIGABLE_ROOMS;
 
 /**
  * Turn a stored delivery field into a NAV_LOCATIONS entry, or null.
