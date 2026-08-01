@@ -42,9 +42,9 @@ import re
 import subprocess
 import sys
 
-PI = 'damith-raspberry@192.168.1.23'
+PI = 'damith-raspberry@damith-Raspberry-4B.local'
 REMOTE_JSON = '~/maps/locations.json'
-DEFAULT_MAP = 'office_map_v2'
+DEFAULT_MAP = 'faculty_map'
 CONSTANTS = os.path.join(os.path.dirname(__file__), '..', 'src', 'constants', 'index.js')
 
 BEGIN = 'export const NAV_LOCATIONS = ['
