@@ -70,6 +70,10 @@ export default function RobotLiveView() {
       ros: rosConn, name: '/amcl_pose',
       messageType: 'geometry_msgs/PoseWithCovarianceStamped',
     });
+    const odomTopic = new ROSLIB.Topic({
+      ros: rosConn, name: '/odom',
+      messageType: 'nav_msgs/Odometry',
+    });
     const planTopic = new ROSLIB.Topic({
       ros: rosConn, name: '/plan', messageType: 'nav_msgs/Path',
       throttle_rate: PLAN_THROTTLE_MS, queue_length: 1,
@@ -104,6 +108,8 @@ export default function RobotLiveView() {
 
     scanTopic.subscribe((msg) => { scanRef.current = msg; });
     planTopic.subscribe((msg) => { planRef.current = msg; });
+    
+    // Primary pose from AMCL
     poseTopic.subscribe((msg) => {
       poseRef.current = msg.pose.pose;
       const p = msg.pose.pose.position;
@@ -111,10 +117,21 @@ export default function RobotLiveView() {
       setPoseText(`x ${p.x.toFixed(2)} m · y ${p.y.toFixed(2)} m · ${(yaw * 180 / Math.PI).toFixed(0)}°`);
     });
 
+    // Fallback pose from odometry (/odom)
+    odomTopic.subscribe((msg) => {
+      if (!poseRef.current) {
+        poseRef.current = msg.pose.pose;
+        const p = msg.pose.pose.position;
+        const yaw = quatToYaw(msg.pose.pose.orientation);
+        setPoseText(`x ${p.x.toFixed(2)} m · y ${p.y.toFixed(2)} m · ${(yaw * 180 / Math.PI).toFixed(0)}°`);
+      }
+    });
+
     return () => {
       mapTopic.unsubscribe();
       scanTopic.unsubscribe();
       poseTopic.unsubscribe();
+      odomTopic.unsubscribe();
       planTopic.unsubscribe();
     };
   }, [rosConn]);

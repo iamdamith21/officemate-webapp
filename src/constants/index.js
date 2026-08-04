@@ -29,9 +29,9 @@ export const DELIVERY_STATES = [
 // NOTE: these are decorative PIXEL coordinates for the legacy floor-plan
 // graphic — they are not map-frame metres. Real poses live in NAV_LOCATIONS.
 export const ROOM_COORDS = {
-  'Dean Sir Office':   { x: 250, y: 175 },
-  'Room 1':            { x: 250, y: 80  },
-  'Room 2':            { x: 250, y: 270 },
+  'Base Station':      { x: 250, y: 175 },
+  'Server Room Door':  { x: 250, y: 80  },
+  'Research Lab Door': { x: 250, y: 270 },
   "Dean's Office":     { x: 250, y: 175 },
   'IT Room 101':       { x: 90,  y: 80  },
   'IT Room 102':       { x: 90,  y: 80  },
@@ -46,9 +46,9 @@ export const ROOM_COORDS = {
   'Conference Room':   { x: 250, y: 270 },
 };
 
-export const BASE_COORDS = ROOM_COORDS['Dean Sir Office'];
+export const BASE_COORDS = ROOM_COORDS['Base Station'];
 
-// ─── Real navigable locations (map: office_map_v2) ────────────────────────
+// ─── Real navigable locations (map: server_room_map) ──────────────────────
 //
 // These are the ONLY three places the robot can actually drive to. Everything
 // in ROOMS above is a label with no surveyed pose behind it — a delivery to one
@@ -81,34 +81,41 @@ export const BASE_COORDS = ROOM_COORDS['Dean Sir Office'];
 export const NAV_LOCATIONS = [
   {
     id: 'dean_office',
-    label: 'Dean Sir Office',
+    label: 'Base Station',
     rosName: 'base_station',
     isBase: true,
-    dock:    { x: -0.145, y: 0.145, yaw: 3.3, z: 0.0287, w: 0.9996 },
-    navSafe: { x: -0.145, y: 0.145, yaw: 3.3, z: 0.0287, w: 0.9996 },
+    dock:    { x: -0.045, y: 0.122, yaw: -0.2, z: -0.0017, w: 1.0000 },
+    navSafe: { x: -0.045, y: 0.122, yaw: -0.2, z: -0.0017, w: 1.0000 },
     dockCost: 0,
     surveyedAt: { x: -0.490, y: -0.988 },
     note: 'Moved 0.57 m off the original spot, which was against a wall. Approach point, not a charging dock.',
   },
   {
-    id: 'room_2',
-    label: 'Room 2',
-    rosName: 'recipient_desk',
-    dock:    { x: 6.391, y: 0.366, yaw: -0.6, z: -0.0054, w: 1.0000 },
-    navSafe: { x: 6.391, y: 0.366, yaw: -0.6, z: -0.0054, w: 1.0000 },
+    id: 'research_lab_door',
+    label: 'Research Lab Door',
+    rosName: 'research_lab_door',
+    dock:    { x: 3.969, y: 3.437, yaw: 5.2, z: 0.0453, w: 0.9990 },
+    navSafe: { x: 3.969, y: 3.437, yaw: 5.2, z: 0.0453, w: 0.9990 },
     dockCost: 0,
-    surveyedAt: { x: 2.157, y: -1.666 },
-    note: 'Moved 0.18 m — the original was free but had no clearance around it.',
+    note: 'REVIEW: auto-added by sync_locations; set a proper label.',
   },
   {
-    id: 'room_1',
-    label: 'Room 1',
-    rosName: 'sender_desk',
-    dock:    { x: 2.516, y: 0.289, yaw: -2.8, z: -0.0242, w: 0.9997 },
-    navSafe: { x: 2.516, y: 0.289, yaw: -2.8, z: -0.0242, w: 0.9997 },
+    id: 'server_room_door',
+    label: 'Server Room Door',
+    rosName: 'server_room_door',
+    dock:    { x: 0.240, y: 3.403, yaw: 88.2, z: 0.6960, w: 0.7180 },
+    navSafe: { x: 0.240, y: 3.403, yaw: 88.2, z: 0.6960, w: 0.7180 },
     dockCost: 0,
-    surveyedAt: { x: 1.150, y: 0.240 },
-    note: 'Moved 0.30 m off the original spot for clearance.',
+    note: 'REVIEW: auto-added by sync_locations; set a proper label.',
+  },
+  {
+    id: 'store_room_door',
+    label: 'Store Room Door',
+    rosName: 'store_room_door',
+    dock:    { x: 4.133, y: -1.061, yaw: -86.6, z: -0.6856, w: 0.7280 },
+    navSafe: { x: 4.133, y: -1.061, yaw: -86.6, z: -0.6856, w: 0.7280 },
+    dockCost: 0,
+    note: 'REVIEW: auto-added by sync_locations; set a proper label.',
   },
 ];
 

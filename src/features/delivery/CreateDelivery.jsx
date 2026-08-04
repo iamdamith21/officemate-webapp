@@ -3,11 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../config/api';
-import { DEPARTMENTS, ROOMS } from '../../constants';
+import { DEPARTMENTS, NAV_LOCATIONS } from '../../constants';
+import { useDeliveryMission } from '../../hooks/useDeliveryMission';
 
 export default function CreateDelivery() {
   const navigate = useNavigate();
   const { user, addNotification, fetchDeliveries } = useAuth();
+  // Placing a request used to POST to Mongo and stop there. The Express API has
+  // no ROS client, so nothing ever reached the robot and the mission FSM sat in
+  // IDLE — the request was recorded and emailed, and the robot never moved.
+  // Dispatching from here is what closes that gap for the USER flow; before
+  // this, only an admin pressing Dispatch on AdminDashboard could start a run.
+  const { dispatch: dispatchMission } = useDeliveryMission();
 
   const [formData, setFormData] = useState({
     recipientEmail: '',
@@ -120,7 +127,27 @@ export default function CreateDelivery() {
           `Your delivery request to ${formData.recipientName} has been submitted successfully.`
         );
         await fetchDeliveries();
-        alert(`✅ Delivery request for ${formData.recipientName} placed successfully!`);
+
+        // Hand the saved record straight to the robot. dispatchMission resolves
+        // BOTH ends against the surveyed locations before sending anything, so a
+        // destination the robot has never been surveyed at is refused here
+        // rather than stranding it mid-run.
+        //
+        // The request is deliberately still treated as placed when dispatch
+        // fails: it is saved, the recipient has been emailed, and an admin can
+        // dispatch it later from the dashboard. Silently discarding a saved
+        // request because the robot happened to be offline would be worse.
+        const created = response.data.data;
+        const sent = created ? dispatchMission(created) : false;
+
+        alert(
+          sent
+            ? `✅ Delivery request for ${formData.recipientName} placed — the robot is on its way.`
+            : `✅ Delivery request for ${formData.recipientName} placed.\n\n` +
+              `⚠️ The robot was NOT dispatched — it is offline, busy, or one of the ` +
+              `rooms has no surveyed position. The request is saved and an admin ` +
+              `can dispatch it from the dashboard.`
+        );
         navigate('/user/dashboard');
       }
     } catch (error) {
@@ -239,8 +266,10 @@ export default function CreateDelivery() {
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 text-sm cursor-pointer transition"
                 >
                   <option value="">Select your room / location</option>
-                  {ROOMS.map(room => (
-                    <option key={room} value={room}>{room}</option>
+                  {NAV_LOCATIONS.map(loc => (
+                    <option key={loc.id} value={loc.label}>
+                      {loc.label} (x: {loc.dock.x > 0 ? `+${loc.dock.x.toFixed(2)}` : loc.dock.x.toFixed(2)}m, y: {loc.dock.y > 0 ? `+${loc.dock.y.toFixed(2)}` : loc.dock.y.toFixed(2)}m)
+                    </option>
                   ))}
                 </select>
               </div>
@@ -256,8 +285,10 @@ export default function CreateDelivery() {
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 text-sm cursor-pointer transition"
                 >
                   <option value="">Select recipient's room</option>
-                  {ROOMS.map(room => (
-                    <option key={room} value={room}>{room}</option>
+                  {NAV_LOCATIONS.map(loc => (
+                    <option key={loc.id} value={loc.label}>
+                      {loc.label} (x: {loc.dock.x > 0 ? `+${loc.dock.x.toFixed(2)}` : loc.dock.x.toFixed(2)}m, y: {loc.dock.y > 0 ? `+${loc.dock.y.toFixed(2)}` : loc.dock.y.toFixed(2)}m)
+                    </option>
                   ))}
                 </select>
               </div>

@@ -3,7 +3,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import API from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import useRobotStatus from '../../hooks/useRobotStatus';
-import { DELIVERY_STATES } from '../../constants';
+import { DELIVERY_STATES, resolveRosLocation } from '../../constants';
 import { getStatusColor } from '../../utils/helpers';
 import RobotLiveView from './RobotLiveView';
 import NavigatePanel from './NavigatePanel';
@@ -311,11 +311,17 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
                       <div>
                         <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Pickup</span>
-                        <span className="text-slate-600 font-medium">{req.pickupLocation || '—'}</span>
+                        <span className="text-slate-600 font-medium">
+                          {req.pickupLocation || '—'}
+                          {resolveRosLocation(req.pickupLocation) && ` (x: ${resolveRosLocation(req.pickupLocation).dock.x > 0 ? `+${resolveRosLocation(req.pickupLocation).dock.x.toFixed(2)}` : resolveRosLocation(req.pickupLocation).dock.x.toFixed(2)}m, y: ${resolveRosLocation(req.pickupLocation).dock.y > 0 ? `+${resolveRosLocation(req.pickupLocation).dock.y.toFixed(2)}` : resolveRosLocation(req.pickupLocation).dock.y.toFixed(2)}m)`}
+                        </span>
                       </div>
                       <div>
                         <span className="text-slate-400 font-semibold block text-[9px] uppercase tracking-wider">Destination</span>
-                        <span className="text-slate-600 font-medium truncate block">{req.deliveryDestination || '—'}</span>
+                        <span className="text-slate-600 font-medium truncate block">
+                          {req.deliveryDestination || '—'}
+                          {resolveRosLocation(req.deliveryDestination) && ` (x: ${resolveRosLocation(req.deliveryDestination).dock.x > 0 ? `+${resolveRosLocation(req.deliveryDestination).dock.x.toFixed(2)}` : resolveRosLocation(req.deliveryDestination).dock.x.toFixed(2)}m, y: ${resolveRosLocation(req.deliveryDestination).dock.y > 0 ? `+${resolveRosLocation(req.deliveryDestination).dock.y.toFixed(2)}` : resolveRosLocation(req.deliveryDestination).dock.y.toFixed(2)}m)`}
+                        </span>
                       </div>
                     </div>
 
@@ -380,8 +386,22 @@ export default function AdminDashboard() {
                       <tr key={req._id} className="hover:bg-slate-50/50 transition">
                         <td className="py-4 pl-2 font-bold text-slate-800">{req.employeeId?.name || '—'}</td>
                         <td className="py-4 text-slate-700">{req.recipientName || '—'}</td>
-                        <td className="py-4 text-slate-500">{req.pickupLocation || '—'}</td>
-                        <td className="py-4 text-slate-500 text-[10px] max-w-[140px] truncate">{req.deliveryDestination || '—'}</td>
+                        <td className="py-4 text-slate-500 text-xs">
+                          {req.pickupLocation || '—'}
+                          {resolveRosLocation(req.pickupLocation) && (
+                            <span className="block text-[10px] text-slate-400 font-mono">
+                              x: {resolveRosLocation(req.pickupLocation).dock.x > 0 ? `+${resolveRosLocation(req.pickupLocation).dock.x.toFixed(2)}` : resolveRosLocation(req.pickupLocation).dock.x.toFixed(2)}m, y: {resolveRosLocation(req.pickupLocation).dock.y > 0 ? `+${resolveRosLocation(req.pickupLocation).dock.y.toFixed(2)}` : resolveRosLocation(req.pickupLocation).dock.y.toFixed(2)}m
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-4 text-slate-500 text-xs max-w-[160px]">
+                          {req.deliveryDestination || '—'}
+                          {resolveRosLocation(req.deliveryDestination) && (
+                            <span className="block text-[10px] text-slate-400 font-mono truncate">
+                              x: {resolveRosLocation(req.deliveryDestination).dock.x > 0 ? `+${resolveRosLocation(req.deliveryDestination).dock.x.toFixed(2)}` : resolveRosLocation(req.deliveryDestination).dock.x.toFixed(2)}m, y: {resolveRosLocation(req.deliveryDestination).dock.y > 0 ? `+${resolveRosLocation(req.deliveryDestination).dock.y.toFixed(2)}` : resolveRosLocation(req.deliveryDestination).dock.y.toFixed(2)}m
+                            </span>
+                          )}
+                        </td>
                         <td className="py-4 text-slate-700 max-w-[120px] truncate">{req.description || 'Documents'}</td>
                         <td className="py-4">
                           <span className={`px-2.5 py-1 rounded-xl text-[9px] font-bold uppercase tracking-wider border ${getStatusColor(req.status)}`}>

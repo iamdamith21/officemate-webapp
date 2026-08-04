@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import * as ROSLIB from 'roslib';
 import { useAuth } from '../context/AuthContext';
-import { resolveRosLocation } from '../constants';
+import { resolveRosLocation, NAV_LOCATIONS } from '../constants';
 
 /**
  * useDeliveryMission — hand a delivery request to the robot's mission FSM.
@@ -101,7 +101,10 @@ export function useDeliveryMission() {
       setStatus('error');
       setMessage(
         `The robot has no surveyed position for the ${bad}. ` +
-        'Only Dean Sir Office, Room 1 and Room 2 can be driven to.'
+        // Derived, not hardcoded: this list said "Dean Sir Office, Room 1 and
+        // Room 2" long after the map was re-surveyed and those labels stopped
+        // existing, so the error named places the robot had never heard of.
+        `Only ${NAV_LOCATIONS.map((l) => l.label).join(', ')} can be driven to.`
       );
       return false;
     }
@@ -131,9 +134,11 @@ export function useDeliveryMission() {
         mission_id: id,
         sender_location: sender.rosName,
         recipient_location: recipient.rosName,
-        // Empty means "accept any tag". The MFRC522 cannot hold 3.3 V under its
-        // antenna load, so delivery_manager runs with require_rfid:=false and
-        // this field is not enforced yet.
+        // Empty means "accept ANY tag" — not "skip the check". Since the
+        // MFRC522's 3.3 V decoupling was fixed, delivery_manager runs with
+        // require_rfid:=true, so the recipient must still present a card at the
+        // dropoff; any card will satisfy it. Put a specific UID here to bind a
+        // delivery to one person's card.
         recipient_rfid: '',
         // Empty means "use the node's base_location parameter", which is where
         // the robot's real home is configured.

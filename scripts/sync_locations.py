@@ -42,9 +42,9 @@ import re
 import subprocess
 import sys
 
-PI = 'damith-raspberry@damith-Raspberry-4B.local'
+PI = 'damith-raspberry@10.54.61.152'
 REMOTE_JSON = '~/maps/locations.json'
-DEFAULT_MAP = 'faculty_map'
+DEFAULT_MAP = 'server_room'
 CONSTANTS = os.path.join(os.path.dirname(__file__), '..', 'src', 'constants', 'index.js')
 
 BEGIN = 'export const NAV_LOCATIONS = ['
@@ -114,9 +114,9 @@ def render(locs, meta):
     review = []
     for ros_name in sorted(locs):
         p = locs[ros_name]
-        o = p.get('orientation', {})
-        z, w = float(o.get('z', 0.0)), float(o.get('w', 1.0))
-        yaw = yaw_deg(z, w)
+        z = float(p.get('z', p.get('orientation', {}).get('z', 0.0)))
+        w = float(p.get('w', p.get('orientation', {}).get('w', 1.0)))
+        yaw = float(p.get('yaw', yaw_deg(z, w)))
         m = meta.get(ros_name)
         if m and m['label']:
             label = m['label']
@@ -175,11 +175,12 @@ def main():
     print(f'map "{args.map}" — {len(locs)} location(s)')
     for n in sorted(locs):
         p = locs[n]
-        o = p.get('orientation', {})
+        z = float(p.get('z', p.get('orientation', {}).get('z', 0.0)))
+        w = float(p.get('w', p.get('orientation', {}).get('w', 1.0)))
+        yw = float(p.get('yaw', yaw_deg(z, w)))
         lbl = (meta.get(n) or {}).get('label') or '(new)'
         print('  %-16s -> %-18s x=%+.3f y=%+.3f yaw=%+.1f'
-              % (n, lbl, float(p['x']), float(p['y']),
-                 yaw_deg(float(o.get('z', 0)), float(o.get('w', 1)))))
+              % (n, lbl, float(p['x']), float(p['y']), yw))
 
     gone = [r for r in meta if r not in locs]
     if gone:

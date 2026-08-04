@@ -4,9 +4,45 @@ import API from '../config/api';
 
 const AuthContext = createContext();
 
-// Resolved at build time by Vite, so this is a module constant rather than
-// per-render state — which also keeps it out of the ROS effect's dependencies.
-const ROS_BRIDGE_URL = import.meta.env.VITE_ROS_BRIDGE_URL || 'ws://localhost:9090';
+// Resolution order: ?ros= query param (remembered) > previously remembered >
+// build-time env > localhost.
+//
+// The query param exists because VITE_ROS_BRIDGE_URL is baked in by Vite at
+// BUILD time, so on the Vercel deployment it can only be changed by editing the
+// project env and redeploying. That is unworkable with an ephemeral tunnel
+// (a cloudflared quick tunnel gets a new random hostname every restart), which
+// would mean a redeploy per restart. With this, you open the deployed app once
+// as ...?ros=wss://<current-tunnel-host> and it is remembered from then on.
+//
+// `?ros=` with an empty value clears the override and falls back to the build
+// value — otherwise a stale hostname in localStorage is unclearable from the UI.
+//
+// Note this lets a link decide which bridge YOUR browser talks to, so treat a
+// ...?ros=... link from someone else the same way you'd treat any other link.
+//
+// Still a module constant, evaluated once at load, so it stays out of the ROS
+// effect's dependencies.
+const ROS_URL_STORAGE_KEY = 'officeMate_rosUrl';
+
+function resolveRosBridgeUrl() {
+  let remembered = null;
+  // Wrapped because Safari private mode throws on localStorage access, and a
+  // dashboard that fails to load at all is worse than one on the default URL.
+  try {
+    const override = new URLSearchParams(window.location.search).get('ros');
+    if (override) {
+      localStorage.setItem(ROS_URL_STORAGE_KEY, override);
+      return override;
+    }
+    if (override === '') localStorage.removeItem(ROS_URL_STORAGE_KEY);
+    else remembered = localStorage.getItem(ROS_URL_STORAGE_KEY);
+  } catch {
+    remembered = null;
+  }
+  return remembered || import.meta.env.VITE_ROS_BRIDGE_URL || 'ws://localhost:9090';
+}
+
+const ROS_BRIDGE_URL = resolveRosBridgeUrl();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
