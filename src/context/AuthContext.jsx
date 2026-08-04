@@ -25,21 +25,19 @@ const AuthContext = createContext();
 const ROS_URL_STORAGE_KEY = 'officeMate_rosUrl';
 
 function resolveRosBridgeUrl() {
-  let remembered = null;
-  // Wrapped because Safari private mode throws on localStorage access, and a
-  // dashboard that fails to load at all is worse than one on the default URL.
+  const defaultUrl = import.meta.env.VITE_ROS_BRIDGE_URL || 'ws://10.54.61.152:9090';
   try {
     const override = new URLSearchParams(window.location.search).get('ros');
     if (override) {
       localStorage.setItem(ROS_URL_STORAGE_KEY, override);
       return override;
     }
-    if (override === '') localStorage.removeItem(ROS_URL_STORAGE_KEY);
-    else remembered = localStorage.getItem(ROS_URL_STORAGE_KEY);
-  } catch {
-    remembered = null;
-  }
-  return remembered || import.meta.env.VITE_ROS_BRIDGE_URL || 'ws://localhost:9090';
+    const remembered = localStorage.getItem(ROS_URL_STORAGE_KEY);
+    if (remembered && remembered !== 'ws://localhost:9090' && remembered !== 'ws://10.204.248.152:9090') {
+      return remembered;
+    }
+  } catch {}
+  return defaultUrl;
 }
 
 const ROS_BRIDGE_URL = resolveRosBridgeUrl();

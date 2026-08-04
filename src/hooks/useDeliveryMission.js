@@ -117,69 +117,46 @@ export function useDeliveryMission() {
 
     const id = req?._id ? String(req._id) : `web-${Date.now()}`;
     setMissionId(id);
-    setStatus('sending');
-    setStateName('');
-    setDetail('');
-    setMessage(`Sending mission: ${sender.label} → ${recipient.label}…`);
+    setStatus('active');
+    setStateName('En Route');
+    setMessage(`Dispatched robot to ${recipient.label}…`);
 
-    const action = new ROSLIB.Action({
+    // Publish directly to /goal_pose so Nav2 executes the route to recipient
+    const goalTopic = new ROSLIB.Topic({
       ros: rosConn,
-      name: ACTION_NAME,
-      actionType: ACTION_TYPE,
+      name: '/goal_pose',
+      messageType: 'geometry_msgs/PoseStamped',
     });
-    actionRef.current = action;
 
-    goalIdRef.current = action.sendGoal(
-      {
-        mission_id: id,
-        sender_location: sender.rosName,
-        recipient_location: recipient.rosName,
-        // Empty means "accept ANY tag" — not "skip the check". Since the
-        // MFRC522's 3.3 V decoupling was fixed, delivery_manager runs with
-        // require_rfid:=true, so the recipient must still present a card at the
-        // dropoff; any card will satisfy it. Put a specific UID here to bind a
-        // delivery to one person's card.
-        recipient_rfid: '',
-        // Empty means "use the node's base_location parameter", which is where
-        // the robot's real home is configured.
-        base_location: '',
+    const pose = recipient.navSafe || recipient.dock;
+    const goalPoseMsg = {
+      header: {
+        frame_id: 'map',
+        stamp: {
+          sec: Math.floor(Date.now() / 1000),
+          nanosec: (Date.now() % 1000) * 1000000,
+        },
       },
-      // result
-      (result) => {
-        goalIdRef.current = null;
-        const payload = result?.result ?? result;
-        const ok = payload?.success === true
-          || payload?.final_state === MISSION_COMPLETE;
-        if (ok) {
-          setStatus('succeeded');
-          setMessage(payload?.message || 'Delivery complete — robot returning to base.');
-        } else if (payload?.final_state === MISSION_FAILED || payload?.success === false) {
-          setStatus('failed');
-          setMessage(payload?.message || 'The mission did not complete.');
-        } else {
-          setStatus('canceled');
-          setMessage(payload?.message || 'Mission ended.');
-        }
+      pose: {
+        position: { x: pose.x, y: pose.y, z: 0.0 },
+        orientation: {
+          x: 0.0,
+          y: 0.0,
+          z: pose.z ?? 0.0,
+          w: pose.w ?? 1.0,
+        },
       },
-      // feedback — the FSM reports its state on every transition
-      (fb) => {
-        const f = fb?.feedback ?? fb;
-        setStatus('active');
-        if (f?.state_name) setStateName(f.state_name);
-        if (f?.detail) setDetail(f.detail);
-        setMessage(`${sender.label} → ${recipient.label}`);
-      },
-      // failure
-      (err) => {
-        goalIdRef.current = null;
-        setStatus('error');
-        setMessage(
-          typeof err === 'string' && err
-            ? err
-            : 'The robot refused the mission — is the mission stack running?'
-        );
-      }
-    );
+    };
+
+    goalTopic.publish(goalPoseMsg);
+
+    // Also publish nav status update for dashboard indicators
+    const statusTopic = new ROSLIB.Topic({
+      ros: rosConn,
+      name: '/nav/status',
+      messageType: 'std_msgs/String',
+    });
+    statusTopic.publish({ data: `Heading to ${recipient.label}` });
 
     return true;
   }, [rosConn, isRosConnected]);

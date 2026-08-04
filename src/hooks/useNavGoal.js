@@ -88,16 +88,16 @@ export function useNavGoal() {
       setMessage('Not connected to the robot');
       return;
     }
-    if (!location?.navSafe) {
+    const pose = location?.navSafe || location?.dock || (typeof location?.x === 'number' ? location : null);
+    if (!pose || typeof pose.x !== 'number') {
       setStatus('error');
-      setMessage('That location has no surveyed pose');
+      setMessage('That location has no valid surveyed pose');
       return;
     }
 
-    const pose = location.navSafe;
     setTarget(location);
     setStatus('sending');
-    setMessage(`Sending ${location.label}…`);
+    setMessage(`Sending ${location.label || 'Goal'}…`);
     setDistance(null);
 
     // 1. Publish directly to /goal_pose topic (matches RViz 2D Goal Pose behavior)

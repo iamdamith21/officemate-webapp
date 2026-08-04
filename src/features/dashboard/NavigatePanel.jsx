@@ -53,21 +53,21 @@ export default function NavigatePanel() {
           metres in the SLAM map frame, plus a heading — and showing them invites
           the reader to treat them as room numbers. The location name is the
           contract the rest of the system uses anyway. */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {NAV_LOCATIONS.map((loc) => {
           const isTarget = target?.id === loc.id;
           const isDriving = isTarget && isBusy;
+          const targetPose = loc.navSafe || loc.dock;
           return (
             <button
               key={loc.id}
               type="button"
-              disabled={!isRosConnected || isBusy}
               onClick={() => goTo(loc)}
               className={`group flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition ${
                 isDriving
                   ? 'border-sky-300 bg-sky-50 ring-1 ring-sky-200'
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]'
-              } disabled:cursor-not-allowed disabled:opacity-50`}
+              }`}
             >
               <span
                 aria-hidden="true"
@@ -81,11 +81,11 @@ export default function NavigatePanel() {
                 <span className="block truncate text-sm font-semibold text-slate-800">
                   {loc.label}
                 </span>
-                <span className="mt-0.5 block text-[11px] font-medium text-slate-500">
+                <span className="mt-0.5 block text-[10px] font-mono text-slate-500">
                   {isDriving
                     ? 'On the way…'
-                    : loc.isBase
-                      ? 'Base station'
+                    : targetPose
+                      ? `x: ${targetPose.x > 0 ? `+${targetPose.x.toFixed(2)}` : targetPose.x.toFixed(2)}m, y: ${targetPose.y > 0 ? `+${targetPose.y.toFixed(2)}` : targetPose.y.toFixed(2)}m`
                       : 'Delivery point'}
                 </span>
               </span>
