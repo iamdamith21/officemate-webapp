@@ -227,6 +227,52 @@ export default function RobotLiveView() {
     return () => cancelAnimationFrame(raf);
   }, [haveMap]);
 
+  const handleCanvasClick = (e) => {
+    const cv = canvasRef.current;
+    const map = mapRef.current;
+    if (!cv || !map || !rosConn) return;
+
+    const rect = cv.getBoundingClientRect();
+    const clickX = (e.clientX - rect.left) * (cv.width / rect.width);
+    const clickY = (e.clientY - rect.top) * (cv.height / rect.height);
+
+    const { resolution: res, origin } = map.info;
+    const mw = map.info.width, mh = map.info.height;
+
+    const scale = Math.min(cv.width / mw, cv.height / mh);
+    const drawW = mw * scale, drawH = mh * scale;
+    const offX = (cv.width - drawW) / 2, offY = (cv.height - drawH) / 2;
+
+    if (clickX < offX || clickX > offX + drawW || clickY < offY || clickY > offY + drawH) return;
+
+    // canvas px -> world metres
+    const wx = origin.position.x + ((clickX - offX) / scale) * res;
+    const wy = origin.position.y + ((drawH - (clickY - offY)) / scale) * res;
+
+    // Send 2D Goal Pose to ROS 2 Nav2
+    const goalTopic = new ROSLIB.Topic({
+      ros: rosConn,
+      name: '/goal_pose',
+      messageType: 'geometry_msgs/PoseStamped',
+    });
+
+    goalTopic.publish({
+      header: {
+        frame_id: 'map',
+        stamp: {
+          sec: Math.floor(Date.now() / 1000),
+          nanosec: (Date.now() % 1000) * 1000000,
+        },
+      },
+      pose: {
+        position: { x: wx, y: wy, z: 0.0 },
+        orientation: { x: 0.0, y: 0.0, z: 0.0, w: 1.0 },
+      },
+    });
+
+    setPoseText(`🎯 Goal sent: x ${wx.toFixed(2)} m · y ${wy.toFixed(2)} m`);
+  };
+
   const status = !rosConn
     ? { text: 'Robot Standby', tone: 'text-amber-700 bg-amber-50 border-amber-200' }
     : !haveMap
@@ -240,7 +286,7 @@ export default function RobotLiveView() {
         <div>
           <h3 className="text-base sm:text-lg font-bold text-slate-800">Live Robot Location & Map</h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Real-time view of the robot's current position and active delivery path
+            Real-time view of the robot's current position (Click map to send navigation goal)
           </p>
         </div>
         <span className={`text-[10px] border px-3 py-1 rounded-full font-bold uppercase tracking-wider ${status.tone}`}>
@@ -254,7 +300,9 @@ export default function RobotLiveView() {
           ref={canvasRef}
           width={800}
           height={420}
-          className="w-full h-[220px] sm:h-[280px] object-contain block"
+          onClick={handleCanvasClick}
+          title="Click anywhere on the map to send a navigation goal pose"
+          className="w-full h-[220px] sm:h-[280px] object-contain block cursor-crosshair"
         />
 
         {!rosConn && (

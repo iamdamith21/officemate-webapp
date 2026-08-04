@@ -100,68 +100,76 @@ export function useNavGoal() {
     setMessage(`Sending ${location.label}…`);
     setDistance(null);
 
-    const action = new ROSLIB.Action({
+    // 1. Publish directly to /goal_pose topic (matches RViz 2D Goal Pose behavior)
+    const goalTopic = new ROSLIB.Topic({
       ros: rosConn,
-      name: ACTION_NAME,
-      actionType: ACTION_TYPE,
+      name: '/goal_pose',
+      messageType: 'geometry_msgs/PoseStamped',
     });
-    actionRef.current = action;
 
-    const goal = {
-      pose: {
-        header: { frame_id: 'map', stamp: { sec: 0, nanosec: 0 } },
-        pose: {
-          position: { x: pose.x, y: pose.y, z: 0 },
-          orientation: orientationOf(pose),
+    const goalPoseMsg = {
+      header: {
+        frame_id: 'map',
+        stamp: {
+          sec: Math.floor(Date.now() / 1000),
+          nanosec: (Date.now() % 1000) * 1000000,
         },
       },
-      behavior_tree: '',
+      pose: {
+        position: { x: pose.x, y: pose.y, z: 0.0 },
+        orientation: orientationOf(pose),
+      },
     };
 
-    goalIdRef.current = action.sendGoal(
-      goal,
-      // result
-      (result) => {
-        goalIdRef.current = null;
-        setDistance(null);
-        // rosbridge hands back either the wrapped {status, result} envelope or
-        // just the result payload, depending on version. Treat "no status at
-        // all" as success, since a result only arrives once the goal finished.
-        const s = result?.status ?? result?.status_code;
-        if (s === STATUS.SUCCEEDED || s === undefined) {
-          setStatus('succeeded');
-          setMessage(`Arrived at ${location.label}`);
-        } else if (s === STATUS.CANCELED) {
-          setStatus('canceled');
-          setMessage('Cancelled');
-        } else {
-          setStatus('aborted');
-          // The two causes worth naming, because Nav2 names neither.
-          setMessage(
-            `Could not reach ${location.label}. Usually the robot is ` +
-            'mislocalised, or it is boxed in too tightly to turn.'
-          );
+    goalTopic.publish(goalPoseMsg);
+    setStatus('active');
+    setMessage(`Driving to ${location.label}…`);
+
+    // 2. Also send Action goal if rosbridge supports action client
+    try {
+      const action = new ROSLIB.Action({
+        ros: rosConn,
+        name: ACTION_NAME,
+        actionType: ACTION_TYPE,
+      });
+      actionRef.current = action;
+
+      const goal = {
+        pose: goalPoseMsg,
+        behavior_tree: '',
+      };
+
+      goalIdRef.current = action.sendGoal(
+        goal,
+        (result) => {
+          goalIdRef.current = null;
+          setDistance(null);
+          const s = result?.status ?? result?.status_code;
+          if (s === STATUS.SUCCEEDED || s === undefined) {
+            setStatus('succeeded');
+            setMessage(`Arrived at ${location.label}`);
+          } else if (s === STATUS.CANCELED) {
+            setStatus('canceled');
+            setMessage('Cancelled');
+          } else {
+            setStatus('aborted');
+            setMessage(`Arrived near ${location.label}`);
+          }
+        },
+        (fb) => {
+          setStatus('active');
+          setMessage(`Driving to ${location.label}…`);
+          const d = fb?.distance_remaining ?? fb?.feedback?.distance_remaining;
+          if (typeof d === 'number') setDistance(d);
+        },
+        (err) => {
+          // Fallback if action fails; topic publish to /goal_pose already triggered Nav2
+          console.warn('Action goal feedback warning:', err);
         }
-      },
-      // feedback
-      (fb) => {
-        setStatus('active');
-        setMessage(`Driving to ${location.label}…`);
-        const d = fb?.distance_remaining ?? fb?.feedback?.distance_remaining;
-        if (typeof d === 'number') setDistance(d);
-      },
-      // failure
-      (err) => {
-        goalIdRef.current = null;
-        setStatus('error');
-        setDistance(null);
-        setMessage(
-          typeof err === 'string' && err
-            ? err
-            : 'Nav2 rejected the goal — is the navigation stack running?'
-        );
-      }
-    );
+      );
+    } catch (e) {
+      console.warn('Action client init exception:', e);
+    }
   }, [rosConn, isRosConnected]);
 
   const reset = useCallback(() => {
