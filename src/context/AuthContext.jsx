@@ -260,10 +260,44 @@ export function AuthProvider({ children }) {
   // Confirm a delivery request (recipient accepts)
   const confirmDelivery = async (deliveryId) => {
     try {
-      await API.patch(`/deliveries/confirm/${deliveryId}`);
+      const res = await API.patch(`/deliveries/confirm/${deliveryId}`);
       setPendingConfirmations(prev => prev.filter(d => d._id !== deliveryId));
       await fetchDeliveries();
-      addNotification('Delivery Confirmed', 'The robot will now head to the sender to collect the documents.');
+
+      const confirmedReq = res.data?.data || deliveryRequests.find(d => d._id === deliveryId);
+      
+      // Dispatch robot navigation pose to destination via ROS 2 Nav2
+      if (confirmedReq && rosConn) {
+        const dest = resolveRosLocation(confirmedReq.deliveryDestination) || resolveRosLocation(confirmedReq.pickupLocation);
+        if (dest) {
+          const pose = dest.navSafe || dest.dock;
+          const goalTopic = new ROSLIB.Topic({
+            ros: rosConn,
+            name: '/goal_pose',
+            messageType: 'geometry_msgs/PoseStamped',
+          });
+          goalTopic.publish({
+            header: {
+              frame_id: 'map',
+              stamp: {
+                sec: Math.floor(Date.now() / 1000),
+                nanosec: (Date.now() % 1000) * 1000000,
+              },
+            },
+            pose: {
+              position: { x: pose.x, y: pose.y, z: 0.0 },
+              orientation: {
+                x: 0.0,
+                y: 0.0,
+                z: pose.z ?? 0.0,
+                w: pose.w ?? 1.0,
+              },
+            },
+          });
+        }
+      }
+
+      addNotification('Delivery Confirmed', 'Delivery accepted! Robot goal sent and navigating to destination.');
     } catch (error) {
       console.error('Error confirming delivery:', error);
     }

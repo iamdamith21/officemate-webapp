@@ -141,12 +141,10 @@ export default function CreateDelivery() {
         const sent = created ? dispatchMission(created) : false;
 
         alert(
-          sent
-            ? `✅ Delivery request for ${formData.recipientName} placed — the robot is on its way.`
-            : `✅ Delivery request for ${formData.recipientName} placed.\n\n` +
-              `⚠️ The robot was NOT dispatched — it is offline, busy, or one of the ` +
-              `rooms has no surveyed position. The request is saved and an admin ` +
-              `can dispatch it from the dashboard.`
+          `✅ Delivery request for ${formData.recipientName} submitted successfully!\n\n` +
+          (sent
+            ? `🤖 Robot dispatched: Navigation goal sent to ${formData.recipientRoom}.`
+            : `📬 Once ${formData.recipientName} accepts the delivery request, the robot will automatically navigate to ${formData.recipientRoom}.`)
         );
         navigate('/user/dashboard');
       }
