@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as ROSLIB from 'roslib';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import API from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
@@ -10,7 +11,7 @@ import NavigatePanel from './NavigatePanel';
 import useDeliveryMission from '../../hooks/useDeliveryMission';
 
 export default function AdminDashboard() {
-  const { deliveryRequests, fetchDeliveries, addNotification, isRobotOnline, rosData, batteryValid, deleteDelivery, clearAllDeliveries } = useAuth();
+  const { deliveryRequests, fetchDeliveries, addNotification, isRobotOnline, rosData, batteryValid, deleteDelivery, clearAllDeliveries, rosConn } = useAuth();
   const [loading, setLoading] = useState(true);
   const robotStatus = useRobotStatus();
   const mission = useDeliveryMission();
@@ -69,25 +70,84 @@ export default function AdminDashboard() {
     ['Heading to Sender', 'Heading to Recipient', 'Awaiting Pickup'].includes(d.status)
   );
   const pendingRequests = deliveryRequests.filter(d => d.status === 'Requested');
+  // Send manual velocity command over ROS 2 topic /cmd_vel
+  const sendManualDrive = (linearX, angularZ) => {
+    if (!rosConn) {
+      addNotification('Manual Drive Warning', 'ROS 2 bridge connection unavailable.');
+      return;
+    }
+    const cmdVelTopic = new ROSLIB.Topic({
+      ros: rosConn,
+      name: '/cmd_vel',
+      messageType: 'geometry_msgs/Twist',
+    });
+    cmdVelTopic.publish({
+      linear: { x: linearX, y: 0.0, z: 0.0 },
+      angular: { x: 0.0, y: 0.0, z: angularZ },
+    });
+  };
+
+  // Send compartment door command over ROS 2 topic /doors/command
+  const sendDoorCommand = (open) => {
+    if (!rosConn) return;
+    const doorTopic = new ROSLIB.Topic({
+      ros: rosConn,
+      name: '/doors/command',
+      messageType: 'std_msgs/String',
+    });
+    doorTopic.publish({ data: open ? 'OPEN' : 'CLOSE' });
+    addNotification('Door Control', open ? 'Compartment doors opening...' : 'Compartment doors closing...');
+  };
+
   const handleRobotCommand = async (command) => {
     let updatedFields;
     switch (command) {
       case 'PAUSE':
+        sendManualDrive(0.0, 0.0);
+        if (mission.cancel) mission.cancel();
         updatedFields = { status: 'Idle' };
-        alert('⏸️ Robot paused and holding position.');
+        addNotification('Robot Control', '⏸️ Robot paused and holding position.');
         break;
+
       case 'RESUME':
         updatedFields = { status: 'Moving' };
-        alert('▶️ Robot resuming task.');
+        addNotification('Robot Control', '▶️ Robot resuming mission.');
         break;
+
       case 'EMERGENCY_STOP':
+        sendManualDrive(0.0, 0.0);
+        if (mission.cancel) mission.cancel();
         updatedFields = { status: 'Idle', batteryLevel: robotStatus.batteryLevel };
-        alert('🚨 EMERGENCY STOP — Robot has halted immediately.');
+        addNotification('Emergency Stop', '🚨 EMERGENCY STOP: All motion halted immediately.');
         break;
-      case 'RETURN_TO_BASE':
-        updatedFields = { currentLocation: "Dean's Office", status: 'Idle', batteryLevel: 100 };
-        alert("🏠 Robot returning to Dean's Office (base).");
+
+      case 'RETURN_TO_BASE': {
+        const baseLoc = resolveRosLocation("Dean's Office") || resolveRosLocation("Base Station");
+        if (baseLoc && rosConn) {
+          const pose = baseLoc.navSafe || baseLoc.dock;
+          const goalTopic = new ROSLIB.Topic({
+            ros: rosConn,
+            name: '/goal_pose',
+            messageType: 'geometry_msgs/PoseStamped',
+          });
+          goalTopic.publish({
+            header: {
+              frame_id: 'map',
+              stamp: {
+                sec: Math.floor(Date.now() / 1000),
+                nanosec: (Date.now() % 1000) * 1000000,
+              },
+            },
+            pose: {
+              position: { x: pose.x, y: pose.y, z: 0.0 },
+              orientation: { x: 0.0, y: 0.0, z: pose.z ?? 0.0, w: pose.w ?? 1.0 },
+            },
+          });
+        }
+        updatedFields = { currentLocation: "Dean's Office", status: 'Idle' };
+        addNotification('Robot Control', "🏠 Robot returning to Dean's Office Base Station.");
         break;
+      }
       default: return;
     }
     try {
@@ -155,23 +215,25 @@ export default function AdminDashboard() {
           {/* Robot Manual Controls */}
           <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-md">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Robot Controls</span>
-            <h3 className="text-lg font-bold text-slate-800 mt-1 mb-5">Manual Override</h3>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <h3 className="text-lg font-bold text-slate-800 mt-1 mb-4">Manual Override</h3>
+            
+            {/* Quick Action Commands */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
               <button
                 disabled={!isRobotOnline}
                 onClick={() => handleRobotCommand('PAUSE')}
-                className={`p-3.5 border rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition ${
+                className={`p-3 border rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition ${
                   isRobotOnline
                     ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold active:scale-[0.98]'
                     : 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed opacity-60'
                 }`}
               >
-                <span>⏸️</span> <span>Pause Robot</span>
+                <span>⏸️</span> <span>Pause</span>
               </button>
               <button
                 disabled={!isRobotOnline}
                 onClick={() => handleRobotCommand('RESUME')}
-                className={`p-3.5 border rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition ${
+                className={`p-3 border rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition ${
                   isRobotOnline
                     ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold active:scale-[0.98]'
                     : 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed opacity-60'
@@ -182,7 +244,7 @@ export default function AdminDashboard() {
               <button
                 disabled={!isRobotOnline}
                 onClick={() => handleRobotCommand('EMERGENCY_STOP')}
-                className={`p-4 border text-white font-extrabold rounded-xl col-span-2 text-xs uppercase tracking-widest text-center shadow-md transition ${
+                className={`p-3.5 border text-white font-extrabold rounded-xl col-span-2 text-xs uppercase tracking-widest text-center shadow-md transition ${
                   isRobotOnline
                     ? 'bg-red-600 hover:bg-red-700 border-red-700 active:scale-[0.98]'
                     : 'bg-slate-400 border-slate-400 cursor-not-allowed opacity-60'
@@ -195,11 +257,80 @@ export default function AdminDashboard() {
                 onClick={() => handleRobotCommand('RETURN_TO_BASE')}
                 className={`p-3 border col-span-2 text-xs uppercase tracking-wider text-center rounded-xl transition ${
                   isRobotOnline
-                    ? 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-[0.98]'
+                    ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.98]'
                     : 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed opacity-60'
                 }`}
               >
                 🏠 Return to Base Station
+              </button>
+            </div>
+
+            {/* Live Teleop D-Pad Controller */}
+            <div className="pt-4 border-t border-slate-100">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-3 text-center">
+                Manual Drive Teleop (D-Pad)
+              </span>
+              <div className="flex flex-col items-center space-y-2">
+                <button
+                  disabled={!isRobotOnline}
+                  onClick={() => sendManualDrive(0.35, 0.0)}
+                  className="w-14 h-12 bg-slate-100 hover:bg-sky-100 hover:border-sky-300 border border-slate-200 rounded-xl font-bold text-slate-700 flex items-center justify-center transition active:scale-95 disabled:opacity-50"
+                  title="Forward (+0.35 m/s)"
+                >
+                  ⬆️
+                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    disabled={!isRobotOnline}
+                    onClick={() => sendManualDrive(0.0, 0.7)}
+                    className="w-14 h-12 bg-slate-100 hover:bg-sky-100 hover:border-sky-300 border border-slate-200 rounded-xl font-bold text-slate-700 flex items-center justify-center transition active:scale-95 disabled:opacity-50"
+                    title="Turn Left (+0.7 rad/s)"
+                  >
+                    ⬅️
+                  </button>
+                  <button
+                    disabled={!isRobotOnline}
+                    onClick={() => sendManualDrive(0.0, 0.0)}
+                    className="w-14 h-12 bg-red-100 hover:bg-red-200 border border-red-300 rounded-xl font-bold text-red-700 flex items-center justify-center transition active:scale-95 disabled:opacity-50"
+                    title="Stop (0 m/s)"
+                  >
+                    ⏹️
+                  </button>
+                  <button
+                    disabled={!isRobotOnline}
+                    onClick={() => sendManualDrive(0.0, -0.7)}
+                    className="w-14 h-12 bg-slate-100 hover:bg-sky-100 hover:border-sky-300 border border-slate-200 rounded-xl font-bold text-slate-700 flex items-center justify-center transition active:scale-95 disabled:opacity-50"
+                    title="Turn Right (-0.7 rad/s)"
+                  >
+                    ➡️
+                  </button>
+                </div>
+                <button
+                  disabled={!isRobotOnline}
+                  onClick={() => sendManualDrive(-0.25, 0.0)}
+                  className="w-14 h-12 bg-slate-100 hover:bg-sky-100 hover:border-sky-300 border border-slate-200 rounded-xl font-bold text-slate-700 flex items-center justify-center transition active:scale-95 disabled:opacity-50"
+                  title="Reverse (-0.25 m/s)"
+                >
+                  ⬇️
+                </button>
+              </div>
+            </div>
+
+            {/* Compartment Door Actuators */}
+            <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
+              <button
+                disabled={!isRobotOnline}
+                onClick={() => sendDoorCommand(true)}
+                className="p-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 transition text-center disabled:opacity-50"
+              >
+                📂 Open Doors
+              </button>
+              <button
+                disabled={!isRobotOnline}
+                onClick={() => sendDoorCommand(false)}
+                className="p-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition text-center disabled:opacity-50"
+              >
+                📁 Close Doors
               </button>
             </div>
           </div>

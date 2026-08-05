@@ -207,4 +207,129 @@ PATH   : ~/ros2_ws
 COMMAND:
   cd ~/ros2_ws && git add -A && git commit -m "Update navigation stack" && git push origin master
 
+
+================================================================================
+CATEGORY 9: SENSOR HEALTH & HARDWARE DIAGNOSTICS
+================================================================================
+
+Step 9.1: Run Full Hardware Bench Self-Test (All Sensors & Actuators)
+---------------------------------------------------------------------
+MACHINE: Raspberry Pi (or Laptop with USB connected to Arduino)
+PATH   : ~/ros2_ws
+COMMAND:
+  python3 ~/ros2_ws/src/hardware_bridge/hardware_bridge/hw_selftest.py /dev/ttyACM0 --no-doors
+  # (or use /dev/arduino if udev rule is set up)
+
+PURPOSE: Verifies sensor health for HC-SR04 ultrasonic sonar on D40/D41 (~15 Hz stream),
+         MPU6050 IMU, INA219 battery monitor, FC-51 IR sensor, LCD, and RFID.
+         Reports PASS/FAIL status for each hardware peripheral on bench test.
+
+
+Step 9.2: Echo Live Ultrasonic Sensor Stream (Low-Level Obstacle Verification)
+--------------------------------------------------------------------------------
+MACHINE: Raspberry Pi (or Laptop over ROS domain 10)
+COMMANDS:
+  # Echo raw Range message (field of view cone, min/max range, distance)
+  ros2 topic echo /ultrasonic/range
+
+  # Echo processed distance stream (in cm) consumed by Web App UI
+  ros2 topic echo /ultrasonic/distance
+
+PURPOSE: Confirms HC-SR04 ultrasonic sensor actively detects low-level objects
+         (e.g., small boxes, trash cans, feet) in front of the robot bumper.
+
+
+Step 9.3: Echo RPLidar Laser Scan Stream
+----------------------------------------
+MACHINE: Raspberry Pi (or Laptop over ROS domain 10)
+COMMAND:
+  ros2 topic echo /scan --qos-reliability best_effort
+
+PURPOSE: Verifies 360° LiDAR range scan data feed at 0.63 m height.
+
+
+Step 9.4: Echo IMU Raw Telemetry
+--------------------------------
+MACHINE: Raspberry Pi (or Laptop over ROS domain 10)
+COMMAND:
+  ros2 topic echo /imu/data_raw
+
+PURPOSE: Verifies MPU6050 linear acceleration and angular velocity streams.
+
+
+Step 9.5: Echo Battery & Power Telemetry
+-----------------------------------------
+MACHINE: Raspberry Pi (or Laptop over ROS domain 10)
+COMMAND:
+  ros2 topic echo /battery/state
+
+PURPOSE: Verifies INA219 pack voltage (3SLi-Ion window 9.0V - 12.6V) and current.
+
+
+Step 9.6: Re-Initialize AMCL Pose (Fix Odometry Drift / Wrong Turns)
+---------------------------------------------------------------------
+MACHINE: Laptop or Raspberry Pi (over ROS domain 10)
+COMMAND:
+  ros2 topic pub --once /initialpose geometry_msgs/PoseWithCovarianceStamped \
+    '{header: {frame_id: "map"}, pose: {pose: {position: {x: 0.0, y: 0.0, z: 0.0}, orientation: {w: 1.0}}}}'
+
+PURPOSE: When the robot begins turning the wrong way mid-path (odometry drift),
+         this re-initializes AMCL at the map origin. You can also set the pose
+         via RViz "2D Pose Estimate" button. After re-initialization, AMCL
+         particle filter will re-converge within 1-2 seconds of driving.
+
+NOTE: Change the x, y, and orientation values to match the robot's actual
+      current position on the map if known.
+
+
+Step 9.7: Check Odometry Drift (Compare odom vs AMCL pose)
+-----------------------------------------------------------
+MACHINE: Laptop or Raspberry Pi (over ROS domain 10)
+COMMANDS:
+  # In terminal 1: watch raw rf2o odometry
+  ros2 topic echo /odom --field pose.pose.position
+
+  # In terminal 2: watch AMCL-corrected pose
+  ros2 topic echo /amcl_pose --field pose.pose.position
+
+PURPOSE: If the two positions diverge significantly (>0.3m difference), the
+         robot has accumulated odometry drift and AMCL is struggling to correct.
+         Re-initialize AMCL pose using Step 9.6.
+
+================================================================================
+CATEGORY 10: RASPBERRY PI CPU OPTIMIZATION & PROCESS CLEANUP
+================================================================================
+
+Step 10.1: Set Raspberry Pi CPU to Maximum Performance Mode
+------------------------------------------------------------
+MACHINE: Raspberry Pi
+COMMAND:
+  sudo echo "performance" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+
+PURPOSE: Forces CPU to stay at full clock speed (1.5 GHz) instead of down-clocking
+         on idle, eliminating micro-stalls during ROS 2 path calculations.
+
+
+Step 10.2: Stop & Disable Unneeded Background Daemons
+-----------------------------------------------------
+MACHINE: Raspberry Pi
+COMMANDS:
+  # Disable printing, bluetooth, and error reporting daemons to free RAM & CPU
+  sudo systemctl stop cups bluetooth modemmanager whoopsie unattended-upgrades snapd 2>/dev/null
+  sudo systemctl disable cups bluetooth modemmanager whoopsie unattended-upgrades snapd 2>/dev/null
+
+PURPOSE: Kills background services that are not needed for ROS 2 navigation,
+         reserving maximum calculation bandwidth for Nav2 & SLAM.
+
+
+Step 10.3: Run One-Touch Raspberry Pi Optimization Script
+---------------------------------------------------------
+MACHINE: Raspberry Pi
+PATH   : ~/ros2_ws
+COMMAND:
+  ~/ros2_ws/scripts/optimize_pi.sh
+
+PURPOSE: Automatically locks CPU to 1.5 GHz performance mode, tune CycloneDDS
+         network socket buffers, flushes RAM cache, and cleans non-essential processes.
+
 ================================================================================

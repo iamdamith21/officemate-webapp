@@ -103,7 +103,7 @@ export function AuthProvider({ children }) {
         // the real robot are interchangeable. If you change a name or a unit
         // here, change it in BOTH api_adapter.py and mock_ros.cjs.
 
-        // 1. Subscribe to Battery
+        // 1. Subscribe to Battery (bridged topic from api_adapter)
         const batteryTopic = new ROSLIB.Topic({
           ros: ros,
           name: '/battery_level',
@@ -113,6 +113,21 @@ export function AuthProvider({ children }) {
           setRosData(prev => ({ ...prev, battery: msg.data }));
           lastRobotMsg.current = Date.now();
           setIsRobotOnline(true);
+        });
+
+        // 1b. Subscribe to native /battery/state (direct from arduino_bridge)
+        const batteryNative = new ROSLIB.Topic({
+          ros: ros,
+          name: '/battery/state',
+          messageType: 'sensor_msgs/BatteryState'
+        });
+        batteryNative.subscribe(msg => {
+          const pct = (msg.percentage != null) ? msg.percentage * 100.0 : null;
+          if (pct !== null) {
+            setRosData(prev => ({ ...prev, battery: Math.round(pct * 10) / 10 }));
+            lastRobotMsg.current = Date.now();
+            setIsRobotOnline(true);
+          }
         });
 
         // 2. Subscribe to Navigation Status
@@ -127,7 +142,7 @@ export function AuthProvider({ children }) {
           setIsRobotOnline(true);
         });
 
-        // 3. Subscribe to Obstacle Distance (Ultrasonic)
+        // 3. Subscribe to Obstacle Distance (bridged topic from api_adapter)
         const obstacleTopic = new ROSLIB.Topic({
           ros: ros,
           name: '/ultrasonic/distance',
@@ -135,6 +150,21 @@ export function AuthProvider({ children }) {
         });
         obstacleTopic.subscribe(msg => {
           setRosData(prev => ({ ...prev, obstacleDist: msg.data }));
+          lastRobotMsg.current = Date.now();
+          setIsRobotOnline(true);
+        });
+
+        // 3b. Subscribe to native /ultrasonic/range (direct from arduino_bridge)
+        const ultraNative = new ROSLIB.Topic({
+          ros: ros,
+          name: '/ultrasonic/range',
+          messageType: 'sensor_msgs/Range'
+        });
+        ultraNative.subscribe(msg => {
+          const cm = (msg.range > 0 && msg.range < msg.max_range)
+            ? Math.round(msg.range * 100.0 * 10) / 10
+            : 999.0;
+          setRosData(prev => ({ ...prev, obstacleDist: cm }));
           lastRobotMsg.current = Date.now();
           setIsRobotOnline(true);
         });
@@ -266,11 +296,11 @@ export function AuthProvider({ children }) {
 
       const confirmedReq = res.data?.data || deliveryRequests.find(d => d._id === deliveryId);
       
-      // Dispatch robot navigation pose to destination via ROS 2 Nav2
+      // Dispatch robot navigation pose to PICKUP POINT (pickupLocation) via ROS 2 Nav2
       if (confirmedReq && rosConn) {
-        const dest = resolveRosLocation(confirmedReq.deliveryDestination) || resolveRosLocation(confirmedReq.pickupLocation);
-        if (dest) {
-          const pose = dest.navSafe || dest.dock;
+        const pickupLoc = resolveRosLocation(confirmedReq.pickupLocation) || resolveRosLocation(confirmedReq.deliveryDestination);
+        if (pickupLoc) {
+          const pose = pickupLoc.navSafe || pickupLoc.dock;
           const goalTopic = new ROSLIB.Topic({
             ros: rosConn,
             name: '/goal_pose',
@@ -294,10 +324,21 @@ export function AuthProvider({ children }) {
               },
             },
           });
+
+          // Also publish nav status update for dashboard indicators
+          const statusTopic = new ROSLIB.Topic({
+            ros: rosConn,
+            name: '/nav/status',
+            messageType: 'std_msgs/String',
+          });
+          statusTopic.publish({ data: `Heading to Pickup: ${confirmedReq.pickupLocation}` });
         }
       }
 
-      addNotification('Delivery Confirmed', 'Delivery accepted! Robot goal sent and navigating to destination.');
+      addNotification(
+        'Delivery Confirmed',
+        `Delivery accepted! Robot dispatched to Pickup Point (${confirmedReq?.pickupLocation || 'Sender'}).`
+      );
     } catch (error) {
       console.error('Error confirming delivery:', error);
     }
