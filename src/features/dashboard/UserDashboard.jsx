@@ -25,6 +25,7 @@ export default function UserDashboard() {
     pendingConfirmations,
     confirmDelivery,
     declineDelivery,
+    deleteDelivery,
     isRobotOnline
   } = useAuth();
 
@@ -537,19 +538,33 @@ export default function UserDashboard() {
             {allMyDeliveries.length > 0 ? (
               allMyDeliveries.map((d) => {
                 const stateIdx = getStateIndex(d.status);
+                const refId = d._id?.slice(-6).toUpperCase();
                 return (
                   <div key={d._id} className="bg-white/80 border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-500 text-xs tracking-wider">
-                        Ref: #{d._id?.slice(-6).toUpperCase()}
+                        Ref: #{refId}
                       </span>
-                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${
-                        d.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                        d.status === 'Cancelled' ? 'bg-red-50 text-red-600 border-red-200' :
-                        'bg-blue-50 text-blue-700 border-blue-200'
-                      }`}>
-                        <span className="mr-1">{DELIVERY_STATES[stateIdx]?.icon}</span> {d.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${
+                          d.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                          d.status === 'Cancelled' ? 'bg-red-50 text-red-600 border-red-200' :
+                          'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}>
+                          <span className="mr-1">{DELIVERY_STATES[stateIdx]?.icon}</span> {d.status}
+                        </span>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Delete delivery #${refId}?`)) {
+                              deleteDelivery(d._id);
+                            }
+                          }}
+                          className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                          title="Delete Record"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
@@ -587,16 +602,18 @@ export default function UserDashboard() {
                   <th className="py-4">Recipient</th>
                   <th className="py-4">Contents</th>
                   <th className="py-4 text-center">Live Status</th>
+                  <th className="py-4 text-right pr-3">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80 text-slate-600">
                 {allMyDeliveries.length > 0 ? (
                   allMyDeliveries.map((d) => {
                     const stateIdx = getStateIndex(d.status);
+                    const refId = d._id?.slice(-6).toUpperCase();
                     return (
                       <tr key={d._id} className="hover:bg-white/60 transition-colors">
                         <td className="py-5 pl-3 font-bold text-slate-500 text-xs tracking-wider">
-                          {d._id?.slice(-6).toUpperCase()}
+                          #{refId}
                         </td>
                         <td className="py-5 font-semibold text-slate-700">{d.employeeId?.name || '—'}</td>
                         <td className="py-5 font-semibold text-slate-700">{d.recipientName || '—'}</td>
@@ -612,12 +629,25 @@ export default function UserDashboard() {
                             <span className="mr-1 text-sm">{DELIVERY_STATES[stateIdx]?.icon}</span> {d.status}
                           </span>
                         </td>
+                        <td className="py-5 text-right pr-3">
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Delete delivery #${refId}?`)) {
+                                deleteDelivery(d._id);
+                              }
+                            }}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                            title="Delete Delivery Record"
+                          >
+                            🗑️
+                          </button>
+                        </td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center py-12 text-slate-500 font-bold uppercase tracking-widest text-sm">
+                    <td colSpan="6" className="text-center py-12 text-slate-500 font-bold uppercase tracking-widest text-sm">
                       <span className="text-3xl block mb-2 opacity-50 grayscale">📭</span>
                       No deliveries yet. Click "New Delivery Request" to start.
                     </td>

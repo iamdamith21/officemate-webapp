@@ -1,0 +1,210 @@
+================================================================================
+          OFFICEMATE AUTONOMOUS ROBOTIC DELIVERY SYSTEM — COMMAND GUIDE
+================================================================================
+
+System IPs & Credentials:
+  - Raspberry Pi IP : 10.54.61.152  (User: damith-raspberry)
+  - Laptop IP       : 10.54.61.111  (User: damith-pc)
+  - ROS 2 Domain ID : ROS_DOMAIN_ID=10
+  - ROS 2 Middleware: RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+  - Web App URL     : http://10.54.61.111:5173 (or http://localhost:5173)
+  - Rosbridge URL   : ws://10.54.61.152:9090
+
+================================================================================
+CATEGORY 1: SLAM MAPPING (Single-Loop Mapping)
+================================================================================
+
+Step 1.1: Launch Mapping Stack on Raspberry Pi
+----------------------------------------------
+MACHINE: Raspberry Pi
+PATH   : ~/ros2_ws
+COMMAND:
+  export ROS_DOMAIN_ID=10
+  export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml
+  export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+  source /opt/ros/humble/setup.bash
+  source ~/ros2_ws/install/setup.bash
+  ros2 launch robot_mapping mapping.launch.py arduino_dev:=/dev/ttyACM0
+
+PURPOSE: Launches Arduino bridge, RF2O laser odometry, RPLidar scan, SLAM Toolbox
+         (online_async mode), and Rosbridge WebSocket server (port 9090).
+
+
+Step 1.2: Drive Robot to Map the Area (Teleop)
+-----------------------------------------------
+MACHINE: Raspberry Pi (or Laptop over ROS domain 10)
+PATH   : ~/ros2_ws
+COMMAND:
+  export ROS_DOMAIN_ID=10
+  export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml
+  export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+  source /opt/ros/humble/setup.bash
+  ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
+PURPOSE: Drive the robot smoothly in a single continuous loop around the room
+         to generate a clean SLAM map without duplicate walls.
+
+
+================================================================================
+CATEGORY 2: SAVE MAP
+================================================================================
+
+Step 2.1: Save SLAM Map to File
+-------------------------------
+MACHINE: Raspberry Pi
+PATH   : /home/damith-raspberry/maps
+COMMAND:
+  export ROS_DOMAIN_ID=10
+  export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml
+  export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+  source /opt/ros/humble/setup.bash
+  mkdir -p ~/maps
+  ros2 run nav2_map_server map_saver_cli -f /home/damith-raspberry/maps/server_room
+
+PURPOSE: Saves the generated map as /home/damith-raspberry/maps/server_room.yaml
+         and /home/damith-raspberry/maps/server_room.pgm.
+         *NOTE*: Always use absolute paths to prevent ImageMagick tilde bugs.
+
+
+================================================================================
+CATEGORY 3: LOCATION MANAGEMENT (Save Target Poses)
+================================================================================
+
+Step 3.1: Save Target Location Poses
+------------------------------------
+MACHINE: Raspberry Pi
+PATH   : ~
+COMMANDS:
+  ~/save_loc.sh save base_station "Base Station"
+  ~/save_loc.sh save research_lab_door "Research Lab Door"
+  ~/save_loc.sh save server_room_door "Server Room Door"
+  ~/save_loc.sh save store_room_door "Store Room Door"
+
+PURPOSE: Reads live TF pose (map -> base_footprint) and saves the pose into
+         ~/maps/locations.json under map key "server_room".
+
+
+Step 3.2: List Saved Locations
+------------------------------
+MACHINE: Raspberry Pi
+PATH   : ~
+COMMAND:
+  ~/save_loc.sh list
+
+PURPOSE: Displays all saved location names and coordinates stored in locations.json.
+
+
+Step 3.3: Delete Location (Optional)
+------------------------------------
+MACHINE: Raspberry Pi
+PATH   : ~
+COMMAND:
+  ~/save_loc.sh delete <location_id>
+
+PURPOSE: Deletes a specific location from locations.json.
+
+
+================================================================================
+CATEGORY 4: LOCATION SYNC TO WEB APPLICATION
+================================================================================
+
+Step 4.1: Sync Saved Locations to Web App Constants
+---------------------------------------------------
+MACHINE: Laptop
+PATH   : ~/officemate-webapp
+COMMAND:
+  python3 scripts/sync_locations.py
+
+PURPOSE: Connects to Raspberry Pi (10.54.61.152), reads ~/maps/locations.json,
+         and populates NAV_LOCATIONS in src/constants/index.js with location names
+         and exact (x, y, yaw) coordinates.
+
+
+================================================================================
+CATEGORY 5: AUTONOMOUS NAVIGATION BRINGUP
+================================================================================
+
+Step 5.1: Launch Navigation Stack on Raspberry Pi
+-------------------------------------------------
+MACHINE: Raspberry Pi
+PATH   : ~/ros2_ws
+COMMAND:
+  export ROS_DOMAIN_ID=10
+  export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml
+  export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+  source /opt/ros/humble/setup.bash
+  source ~/ros2_ws/install/setup.bash
+  ros2 launch robot_navigation navigation.launch.py map:=/home/damith-raspberry/maps/server_room.yaml arduino_dev:=/dev/ttyACM0
+
+PURPOSE: Starts AMCL localization, Nav2 stack, costmaps, Rosbridge server (port 9090),
+         and Telemetry Bridge (api_adapter.py).
+
+
+================================================================================
+CATEGORY 6: RVIZ VISUALIZATION & MONITORING
+================================================================================
+
+Step 6.1: Launch RViz Navigation View
+-------------------------------------
+MACHINE: Laptop
+PATH   : ~/ros2_ws
+COMMAND:
+  ~/ros2_ws/start_rviz.sh
+
+OR MANUAL COMMAND:
+  export ROS_DOMAIN_ID=10
+  export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml
+  export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+  source /opt/ros/humble/setup.bash
+  source ~/ros2_ws/install/setup.bash
+  ros2 run rviz2 rviz2 -d ~/ros2_ws/src/robot_description/rviz/navigation.rviz
+
+PURPOSE: Opens RViz pre-configured with SLAM map, global costmap, local costmap,
+         RPLidar scan points, odometry path, global/local plans, and 4-wheel model.
+
+
+================================================================================
+CATEGORY 7: WEB APPLICATION STACK
+================================================================================
+
+Step 7.1: Start Express API Backend
+-----------------------------------
+MACHINE: Laptop
+PATH   : ~/officemate-webapp
+COMMAND:
+  cd ~/officemate-webapp && npm run server
+
+PURPOSE: Starts MongoDB API server on http://localhost:5000.
+
+
+Step 7.2: Start Vite Frontend Server
+------------------------------------
+MACHINE: Laptop
+PATH   : ~/officemate-webapp
+COMMAND:
+  cd ~/officemate-webapp && npm run dev
+
+PURPOSE: Starts Vite dev server binding to 0.0.0.0:5173.
+         Accessible from laptop at http://localhost:5173
+         Accessible from any device on Wi-Fi at http://10.54.61.111:5173.
+
+
+================================================================================
+CATEGORY 8: GIT SYNCHRONIZATION
+================================================================================
+
+Step 8.1: Push Web App Updates to GitHub
+----------------------------------------
+MACHINE: Laptop
+PATH   : ~/officemate-webapp
+COMMAND:
+  cd ~/officemate-webapp && git add . && git commit -m "Update web app" && git push origin main
+
+Step 8.2: Push ROS 2 Navigation System Updates to GitHub
+--------------------------------------------------------
+MACHINE: Raspberry Pi
+PATH   : ~/ros2_ws
+COMMAND:
+  cd ~/ros2_ws && git add -A && git commit -m "Update navigation stack" && git push origin master
+
+================================================================================

@@ -10,7 +10,7 @@ import NavigatePanel from './NavigatePanel';
 import useDeliveryMission from '../../hooks/useDeliveryMission';
 
 export default function AdminDashboard() {
-  const { deliveryRequests, fetchDeliveries, addNotification, isRobotOnline, rosData, batteryValid } = useAuth();
+  const { deliveryRequests, fetchDeliveries, addNotification, isRobotOnline, rosData, batteryValid, deleteDelivery, clearAllDeliveries } = useAuth();
   const [loading, setLoading] = useState(true);
   const robotStatus = useRobotStatus();
   const mission = useDeliveryMission();
@@ -274,9 +274,23 @@ export default function AdminDashboard() {
                 Manage and advance delivery states through the faculty workflow
               </p>
             </div>
-            <span className="text-[10px] bg-slate-50 text-slate-500 border border-slate-200 px-3 py-1 rounded-full uppercase tracking-wider">
-              {deliveryRequests.length} total
-            </span>
+            <div className="flex items-center gap-2">
+              {deliveryRequests.length > 0 && (
+                <button
+                  onClick={async () => {
+                    if (window.confirm('⚠️ Admin Action: Are you sure you want to delete ALL delivery requests from the database?')) {
+                      await clearAllDeliveries();
+                    }
+                  }}
+                  className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-full text-[10px] font-bold uppercase tracking-wider transition"
+                >
+                  🗑️ Clear All History
+                </button>
+              )}
+              <span className="text-[10px] bg-slate-50 text-slate-500 border border-slate-200 px-3 py-1 rounded-full uppercase tracking-wider">
+                {deliveryRequests.length} total
+              </span>
+            </div>
           </div>
 
           {/* Mobile Card List View (Fits 100% on mobile screens — zero side scroll) */}
@@ -285,6 +299,7 @@ export default function AdminDashboard() {
               deliveryRequests.map((req) => {
                 const isCompleted = req.status === 'Completed' || req.status === 'Cancelled';
                 const isInProgress = ['Heading to Sender', 'Heading to Recipient', 'Awaiting Pickup'].includes(req.status);
+                const refId = req._id?.slice(-6).toUpperCase();
 
                 return (
                   <div key={req._id} className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3">
@@ -292,9 +307,22 @@ export default function AdminDashboard() {
                       <span className="font-bold text-slate-800 text-xs">
                         From: {req.employeeId?.name || '—'}
                       </span>
-                      <span className={`px-2.5 py-1 rounded-xl text-[9px] font-bold uppercase tracking-wider border ${getStatusColor(req.status)}`}>
-                        {req.status || 'Requested'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-1 rounded-xl text-[9px] font-bold uppercase tracking-wider border ${getStatusColor(req.status)}`}>
+                          {req.status || 'Requested'}
+                        </span>
+                        <button
+                          onClick={async () => {
+                            if (window.confirm(`Delete delivery record #${refId}?`)) {
+                              await deleteDelivery(req._id);
+                            }
+                          }}
+                          className="text-slate-400 hover:text-red-600 transition-colors p-1"
+                          title="Delete Record"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
@@ -325,9 +353,6 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* Same two actions as the desktop table — dispatching has
-                        to be reachable on mobile too, since that is where these
-                        requests are most likely to be handled. */}
                     {!isCompleted && (
                       <div className="pt-2 border-t border-slate-100 flex justify-end">
                         {isInProgress ? (
@@ -381,6 +406,7 @@ export default function AdminDashboard() {
                   deliveryRequests.map((req) => {
                     const isCompleted = req.status === 'Completed' || req.status === 'Cancelled';
                     const isInProgress = ['Heading to Sender', 'Heading to Recipient', 'Awaiting Pickup'].includes(req.status);
+                    const refId = req._id?.slice(-6).toUpperCase();
 
                     return (
                       <tr key={req._id} className="hover:bg-slate-50/50 transition">
@@ -409,35 +435,48 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="py-4 text-center">
-                          {isCompleted ? (
-                            <span className="text-slate-300 text-[10px]">—</span>
-                          ) : isInProgress ? (
+                          <div className="flex items-center justify-center gap-2">
+                            {isCompleted ? (
+                              <span className="text-slate-300 text-[10px]">—</span>
+                            ) : isInProgress ? (
+                              <button
+                                onClick={() => handleAdvanceState(req)}
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-xl transition uppercase tracking-wider"
+                              >
+                                ▶ Next Step
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleSendRobot(req)}
+                                disabled={!isRobotOnline || mission.isBusy}
+                                title={
+                                  !isRobotOnline
+                                    ? 'The robot is not connected'
+                                    : mission.isBusy
+                                      ? 'The robot is already on a mission'
+                                      : 'Send the robot to collect and deliver this'
+                                }
+                                className={`px-4 py-2 text-[10px] font-bold rounded-xl transition uppercase tracking-wider ${
+                                  isRobotOnline && !mission.isBusy
+                                    ? 'bg-sky-600 hover:bg-sky-700 text-white active:scale-[0.98]'
+                                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                }`}
+                              >
+                                🤖 Send Robot
+                              </button>
+                            )}
                             <button
-                              onClick={() => handleAdvanceState(req)}
-                              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-xl transition uppercase tracking-wider"
+                              onClick={async () => {
+                                if (window.confirm(`Delete delivery record #${refId}?`)) {
+                                  await deleteDelivery(req._id);
+                                }
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                              title="Delete Record"
                             >
-                              ▶ Next Step
+                              🗑️
                             </button>
-                          ) : (
-                            <button
-                              onClick={() => handleSendRobot(req)}
-                              disabled={!isRobotOnline || mission.isBusy}
-                              title={
-                                !isRobotOnline
-                                  ? 'The robot is not connected'
-                                  : mission.isBusy
-                                    ? 'The robot is already on a mission'
-                                    : 'Send the robot to collect and deliver this'
-                              }
-                              className={`px-4 py-2 text-[10px] font-bold rounded-xl transition uppercase tracking-wider ${
-                                isRobotOnline && !mission.isBusy
-                                  ? 'bg-sky-600 hover:bg-sky-700 text-white active:scale-[0.98]'
-                                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                              }`}
-                            >
-                              🤖 Send Robot
-                            </button>
-                          )}
+                          </div>
                         </td>
                       </tr>
                     );

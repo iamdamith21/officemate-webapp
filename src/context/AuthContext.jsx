@@ -314,6 +314,40 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Delete a single delivery request by ID
+  const deleteDelivery = async (deliveryId) => {
+    try {
+      const response = await API.delete(`/deliveries/${deliveryId}`);
+      if (response.data.success) {
+        setDeliveryRequests(prev => prev.filter(d => d._id !== deliveryId));
+        setPendingConfirmations(prev => prev.filter(d => d._id !== deliveryId));
+        addNotification('Delivery Deleted', 'Delivery record removed from history.');
+        return true;
+      }
+    } catch (error) {
+      console.error('Error deleting delivery:', error);
+      alert(error.response?.data?.message || 'Failed to delete delivery record.');
+      return false;
+    }
+  };
+
+  // Clear all delivery requests from database
+  const clearAllDeliveries = async () => {
+    try {
+      const response = await API.delete('/deliveries/clear-all');
+      if (response.data.success) {
+        setDeliveryRequests([]);
+        setPendingConfirmations([]);
+        addNotification('History Cleared', 'All delivery history has been deleted.');
+        return true;
+      }
+    } catch (error) {
+      console.error('Error clearing delivery history:', error);
+      alert(error.response?.data?.message || 'Failed to clear delivery history.');
+      return false;
+    }
+  };
+
   // Polling effect — run when user is logged in
   useEffect(() => {
     if (!user) return;
@@ -349,6 +383,8 @@ export function AuthProvider({ children }) {
       addNotification,
       confirmDelivery,
       declineDelivery,
+      deleteDelivery,
+      clearAllDeliveries,
       isRosConnected,
       isRobotOnline,
       rosData,

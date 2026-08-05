@@ -224,6 +224,39 @@ router.patch('/update-status/:id', async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────
+// 7. Clear All Delivery Requests (DELETE /api/deliveries/clear-all)
+// ─────────────────────────────────────────────────────────────────
+router.delete('/clear-all', async (req, res) => {
+  try {
+    const result = await DeliveryRequest.deleteMany({});
+    res.status(200).json({
+      success: true,
+      message: `Cleared all delivery requests (${result.deletedCount} items removed).`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
+// ─────────────────────────────────────────────────────────────────
+// 8. Delete Single Delivery Request (DELETE /api/deliveries/:id)
+// ─────────────────────────────────────────────────────────────────
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await DeliveryRequest.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Delivery request not found.' });
+    }
+    res.status(200).json({
+      success: true,
+      message: 'Delivery record deleted successfully.',
+      data: deleted
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 module.exports = router;

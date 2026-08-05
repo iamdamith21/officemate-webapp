@@ -8,13 +8,32 @@ OfficeMate is a modern web application designed for campus offices and universit
 officemate-webapp/
 ├── package.json         # Unified dependencies & orchestration scripts
 ├── README.md            # Project documentation & configuration guide
-├── .env                 # Application environment settings
-├── api/                 # Backend logic & Vercel Serverless Functions
-│   ├── index.js         # Main backend entry point
-│   ├── models/          # Mongoose database models
-│   └── routes/          # API route definitions
-├── scripts/             # Utility scripts (e.g., clear_db.js, mock_ros.js)
+├── COMMANDS_GUIDE.txt   # CLI command reference guide
+├── .env                 # Application environment configuration
+├── api/                 # Backend Node.js / Express API
+│   ├── index.js         # Backend server entry point
+│   ├── models/          # Mongoose database models (DeliveryRequest, Employee, RobotStatus)
+│   ├── routes/          # API route definitions (deliveryRoutes, employeeRoutes, robotRoutes)
+│   └── utils/           # Backend utilities (SMS notifications)
+├── docs/                # Project documentation & technical reports
+├── scripts/             # Development & maintenance scripts
+│   ├── clear_db.cjs     # Script to clear database records
+│   ├── mock_ros.cjs     # Mock ROSBridge WebSocket server for offline UI development
+│   └── sync_locations.py # Script to sync location maps between robot and web app
 ├── src/                 # React frontend application source code
+│   ├── components/      # Global UI components (e.g., ChatAgent AI assistant)
+│   ├── config/          # Axios API configuration
+│   ├── constants/       # Application constants, delivery FSM states & ROS pose maps
+│   ├── context/         # AuthContext (auth state, ROS WebSocket connection, delivery state)
+│   ├── features/        # Feature-based page views
+│   │   ├── analytics/   # Delivery statistics & analytics dashboard
+│   │   ├── auth/        # User login interface
+│   │   ├── dashboard/   # Admin & User dashboards, Activity History, Live SLAM View
+│   │   ├── delivery/    # Delivery request creation form
+│   │   └── profile/     # User profile management
+│   ├── hooks/           # Custom React hooks (useDeliveryMission, useNavGoal, useRobotStatus)
+│   ├── layouts/         # Layout wrappers (DashboardLayout, AuthLayout)
+│   └── utils/           # Helper utility functions
 ├── public/              # Static frontend assets
 └── vite.config.js       # Vite bundler configuration
 ```
